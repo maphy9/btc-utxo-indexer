@@ -1,6 +1,6 @@
 .vscode/
 .idea/
-config.*.yaml
+config.local.yaml
 docs/node_modules
 docs/web_deploy
 vendor/

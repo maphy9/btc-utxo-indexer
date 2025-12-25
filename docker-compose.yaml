@@ -1,0 +1,13 @@
+name: btc-utxo-indexer
+
+services:
+  btc-utxo-indexer:
+    build: .
+    container_name: btc-utxo-indexer-svc
+    command: ["run", "service"]
+    volumes:
+      - ./config.local.yaml:/app/config/config.yaml
+    develop:
+      watch:
+        - path: .
+          action: rebuild
