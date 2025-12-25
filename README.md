@@ -7,7 +7,7 @@ A service for indexing bitcoin transactions (utxo)
 ## Install
 
   ```
-  git clone https://github.com/maphy9/btc-utxo-indexer
+  git clone github.com/maphy9/btc-utxo-indexer
   cd btc-utxo-indexer
   go build main.go
   export KV_VIPER_FILE=./config.yaml
@@ -41,8 +41,8 @@ Make sure that docker installed.
 use `docker run ` with `-p 8080:80` to expose port 80 to 8080
 
   ```
-  docker build -t https://github.com/maphy9/btc-utxo-indexer .
-  docker run -e KV_VIPER_FILE=/config.yaml https://github.com/maphy9/btc-utxo-indexer
+  docker build -t github.com/maphy9/btc-utxo-indexer .
+  docker run -e KV_VIPER_FILE=/config.yaml github.com/maphy9/btc-utxo-indexer
   ```
 
 ## Running from Source
