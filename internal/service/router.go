@@ -16,8 +16,8 @@ func (s *service) router() chi.Router {
 			handlers.CtxLog(s.log),
 		),
 	)
-	r.Route("/integrations/btc-utxo-indexer", func(r chi.Router) {
-		// configure endpoints here
+	r.Route("/", func(r chi.Router) {
+		r.Get("/", handlers.Dummy)
 	})
 
 	return r
