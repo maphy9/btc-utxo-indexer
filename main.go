@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-  "https://github.com/maphy9/btc-utxo-indexer/internal/cli"
+	"github.com/maphy9/btc-utxo-indexer/internal/cli"
 )
 
 func main() {
