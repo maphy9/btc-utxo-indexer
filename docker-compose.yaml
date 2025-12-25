@@ -1,13 +1,59 @@
 name: btc-utxo-indexer
 
 services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: btc-utxo-indexer-postgres
+    hostname: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER} -h localhost",
+        ]
+      interval: 2s
+      timeout: 10s
+      retries: 5
+  migration:
+    build: .
+    container_name: btc-utxo-indexer-migration
+    command: ["migrate", "up"]
+    volumes:
+      - ./config.local.yaml:/app/config/config.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
   btc-utxo-indexer:
     build: .
     container_name: btc-utxo-indexer-svc
     command: ["run", "service"]
     volumes:
       - ./config.local.yaml:/app/config/config.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
     develop:
       watch:
         - path: .
           action: rebuild
+  nginx:
+    image: nginx:1.29-alpine
+    container_name: btc-utxo-indexer-nginx
+    ports:
+      - "8000:80"
+    depends_on:
+      btc-utxo-indexer:
+        condition: service_started
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+
+volumes:
+  pgdata:
