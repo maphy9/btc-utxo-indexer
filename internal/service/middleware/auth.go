@@ -34,7 +34,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			ape.RenderErr(w, apierrors.NewApiError(
 				http.StatusUnauthorized,
-				"Couldn't get the necessary claims from the token",
+				"Could not get the necessary claims from the token",
 			))
 			return
 		}

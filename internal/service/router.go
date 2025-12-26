@@ -22,19 +22,14 @@ func (s *service) router() chi.Router {
 		),
 	)
 
-	r.Group(func(r chi.Router) {
-		r.Route("/", func(r chi.Router) {
-			r.Post("/login", handlers.Login)
-			r.Post("/register", handlers.Register)
-		})
-	})
+	r.Post("/login", handlers.Login)
+	r.Post("/register", handlers.Register)
 	
 	r.Group(func(r chi.Router) {
 		r.Use(
 			middleware.AuthMiddleware,
 		)
-	
-		// TODO: Add other endpoints
+		r.Get("/dummy", handlers.Dummy)
 	})
 
 	return r

@@ -23,6 +23,17 @@ type usersQ struct {
 	sql squirrel.StatementBuilderType
 }
 
+func (m *usersQ) GetByUserID(ctx context.Context, userID int64) (*data.User, error) {
+	query := m.sql.Select("*").
+		From(usersTableName).
+		Where("id = ?", userID).
+		PlaceholderFormat(squirrel.Dollar)
+
+	var result data.User
+	err := m.db.GetContext(ctx, &result, query)
+	return &result, err
+}
+
 func (m *usersQ) GetByUsername(ctx context.Context, username string) (*data.User, error) {
 	query := m.sql.Select("*").
 		From(usersTableName).
