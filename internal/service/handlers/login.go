@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/maphy9/btc-utxo-indexer/internal/service/errors/apierrors"
 	"github.com/maphy9/btc-utxo-indexer/internal/service/helpers"
 	"github.com/maphy9/btc-utxo-indexer/internal/service/requests"
+	"github.com/maphy9/btc-utxo-indexer/internal/service/responses"
 	"gitlab.com/distributed_lab/ape"
 )
 
@@ -16,6 +16,39 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.WithError(err).Debug("bad request")
 		ape.RenderErr(w, apierrors.BadRequest())
+		return
 	}
-	ape.Render(w, fmt.Sprintf("WIP; Request: %v", request))
+
+	user, err := helpers.VerifyUserCredentials(r, request)
+	if err != nil {
+		logger.WithError(err).Debug("invalid user credentials")
+		ape.RenderErr(w, apierrors.NewApiError(
+			http.StatusForbidden, "Invalid user credentials", "invalid_user_credentials",
+		))
+		return
+	}
+
+	token, refreshToken, err := helpers.GenerateJWTTokens(r, user.ID)
+	if err != nil {
+		logger.WithError(err).Error("failed to generate tokens")
+		ape.RenderErr(w, apierrors.NewApiError(
+			http.StatusInternalServerError,
+			"Failed to generate tokens",
+			"failed_to_generate_tokens",
+		))
+		return
+	}
+
+	err = helpers.UpdateUserRefreshToken(r, user.ID, refreshToken)
+	if err != nil {
+		logger.WithError(err).Error("failed to update the refresh token")
+		ape.RenderErr(w, apierrors.NewApiError(
+			http.StatusInternalServerError,
+			"Failed to generate the refresh token",
+			"failed_to_generate_the_refresh_token",
+		))
+		return
+	}
+
+	ape.Render(w, responses.NewLoginResponse(token, refreshToken))
 }

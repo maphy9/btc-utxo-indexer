@@ -44,3 +44,12 @@ func (m *usersQ) Insert(ctx context.Context, user data.User) (*data.User, error)
 	err := m.db.GetContext(ctx, &result, query)
 	return &result, err
 }
+
+func (m *usersQ) UpdateRefreshToken(ctx context.Context, userID int64, refreshToken string) error {
+	query := m.sql.Update(usersTableName).
+		Set("refresh_token", refreshToken).
+		Where("id = ?", userID).
+		PlaceholderFormat(squirrel.Dollar)
+
+	return m.db.ExecContext(ctx, query)
+}
