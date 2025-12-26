@@ -3,7 +3,7 @@ name: btc-utxo-indexer
 services:
   postgres:
     image: postgres:18-alpine
-    container_name: btc-utxo-indexer-postgres
+    container_name: postgres
     hostname: postgres
     environment:
       - POSTGRES_USER=postgres
@@ -22,16 +22,16 @@ services:
       retries: 5
   migration:
     build: .
-    container_name: btc-utxo-indexer-migration
+    container_name: migration
     command: ["migrate", "up"]
     volumes:
       - ./config.local.yaml:/app/config/config.yaml
     depends_on:
       postgres:
         condition: service_healthy
-  btc-utxo-indexer:
+  svc:
     build: .
-    container_name: btc-utxo-indexer-svc
+    container_name: svc
     command: ["run", "service"]
     volumes:
       - ./config.local.yaml:/app/config/config.yaml
@@ -46,11 +46,11 @@ services:
           action: rebuild
   nginx:
     image: nginx:1.29-alpine
-    container_name: btc-utxo-indexer-nginx
+    container_name: nginx
     ports:
       - "8000:80"
     depends_on:
-      btc-utxo-indexer:
+      svc:
         condition: service_started
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
