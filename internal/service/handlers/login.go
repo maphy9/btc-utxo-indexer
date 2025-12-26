@@ -22,9 +22,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	user, err := helpers.VerifyUserCredentials(r, request)
 	if err != nil {
 		logger.WithError(err).Debug("invalid user credentials")
-		ape.RenderErr(w, apierrors.NewApiError(
-			http.StatusForbidden, "Invalid user credentials", "invalid_user_credentials",
-		))
+		ape.RenderErr(w, apierrors.NewApiError(http.StatusForbidden, "Invalid user credentials"))
 		return
 	}
 
@@ -32,9 +30,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.WithError(err).Error("failed to generate tokens")
 		ape.RenderErr(w, apierrors.NewApiError(
-			http.StatusInternalServerError,
-			"Failed to generate tokens",
-			"failed_to_generate_tokens",
+			http.StatusInternalServerError, "Failed to generate tokens",
 		))
 		return
 	}
@@ -43,9 +39,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.WithError(err).Error("failed to update the refresh token")
 		ape.RenderErr(w, apierrors.NewApiError(
-			http.StatusInternalServerError,
-			"Failed to generate the refresh token",
-			"failed_to_generate_the_refresh_token",
+			http.StatusInternalServerError, "Failed to generate the refresh token",
 		))
 		return
 	}

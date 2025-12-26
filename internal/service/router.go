@@ -5,6 +5,7 @@ import (
 	"github.com/maphy9/btc-utxo-indexer/internal/data/pg"
 	"github.com/maphy9/btc-utxo-indexer/internal/service/handlers"
 	"github.com/maphy9/btc-utxo-indexer/internal/service/helpers"
+	"github.com/maphy9/btc-utxo-indexer/internal/service/middleware"
 	"gitlab.com/distributed_lab/ape"
 )
 
@@ -20,9 +21,20 @@ func (s *service) router() chi.Router {
 			helpers.CtxDB(pg.NewMasterQ(s.db)),
 		),
 	)
-	r.Route("/", func(r chi.Router) {
-		r.Post("/login", handlers.Login)
-		r.Post("/register", handlers.Register)
+
+	r.Group(func(r chi.Router) {
+		r.Route("/", func(r chi.Router) {
+			r.Post("/login", handlers.Login)
+			r.Post("/register", handlers.Register)
+		})
+	})
+	
+	r.Group(func(r chi.Router) {
+		r.Use(
+			middleware.AuthMiddleware,
+		)
+	
+		// TODO: Add other endpoints
 	})
 
 	return r
