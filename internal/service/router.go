@@ -22,6 +22,7 @@ func (s *service) router() chi.Router {
 	)
 	r.Route("/", func(r chi.Router) {
 		r.Post("/login", handlers.Login)
+		r.Post("/register", handlers.Register)
 	})
 
 	return r

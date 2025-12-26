@@ -18,7 +18,7 @@ func GenerateJWTTokens(r *http.Request, userID int64) (string, string, error) {
 			"type":    "access",
 		},
 	)
-	tokenString, err := token.SignedString(serviceConfig.TokenKey)
+	tokenString, err := token.SignedString([]byte(serviceConfig.TokenKey))
 	if err != nil {
 		return "", "", err
 	}
@@ -31,16 +31,10 @@ func GenerateJWTTokens(r *http.Request, userID int64) (string, string, error) {
 			"type":    "refresh",
 		},
 	)
-	refreshTokenString, err := refreshToken.SignedString(serviceConfig.RefreshTokenKey)
+	refreshTokenString, err := refreshToken.SignedString([]byte(serviceConfig.RefreshTokenKey))
 	if err != nil {
 		return "", "", err
 	}
 
 	return tokenString, refreshTokenString, err
-}
-
-func UpdateUserRefreshToken(r *http.Request, userID int64, refreshToken string) error {
-	ctx := r.Context()
-	db := DB(r)
-	return db.Users().UpdateRefreshToken(ctx, userID, refreshToken)
 }
