@@ -24,7 +24,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var pgErr *pq.Error
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-				ape.RenderErr(w, apierrors.NewApiError(http.StatusConflict, "Username taken"))
+			ape.RenderErr(w, apierrors.NewApiError(http.StatusConflict, "Username taken"))
 		} else {
 			logger.WithError(err).Debug("Failed to register the user")
 			ape.RenderErr(w, apierrors.NewApiError(

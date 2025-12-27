@@ -57,7 +57,7 @@ func VerifyToken(r *http.Request, tokenString string) (*jwt.Token, error) {
 	if !token.Valid {
 		return nil, errors.New("Invalid token")
 	}
-	
+
 	return token, nil
 }
 

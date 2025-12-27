@@ -16,7 +16,7 @@ type service struct {
 	copus         types.Copus
 	listener      net.Listener
 	serviceConfig *config.ServiceConfig
-	db *pgdb.DB
+	db            *pgdb.DB
 }
 
 func (s *service) run() error {
@@ -36,7 +36,7 @@ func newService(cfg config.Config) *service {
 		copus:         cfg.Copus(),
 		listener:      cfg.Listener(),
 		serviceConfig: cfg.ServiceConfig(),
-		db: 					cfg.DB(),
+		db:            cfg.DB(),
 	}
 }
 

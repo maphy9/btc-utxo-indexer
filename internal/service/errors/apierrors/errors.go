@@ -10,10 +10,10 @@ import (
 
 func NewApiError(status int, detail string) *jsonapi.ErrorObject {
 	return &jsonapi.ErrorObject{
-		Title: http.StatusText(status),
+		Title:  http.StatusText(status),
 		Detail: detail,
 		Status: fmt.Sprintf("%d", status),
-		Code: strings.ReplaceAll(strings.ToLower(detail), " ", "_"),
+		Code:   strings.ReplaceAll(strings.ToLower(detail), " ", "_"),
 	}
 }
 

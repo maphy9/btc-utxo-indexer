@@ -25,7 +25,7 @@ func RegisterUser(r *http.Request, request requests.RegisterRequest) error {
 	}
 
 	user := data.User{
-		Username: request.Username,
+		Username:     request.Username,
 		PasswordHash: passwordHash,
 	}
 	_, err = db.Users().Insert(ctx, user)
@@ -53,4 +53,4 @@ func VerifyUserCredentials(r *http.Request, request requests.LoginRequest) (*dat
 		return nil, errors.New("User doesn't exist")
 	}
 	return user, VerifyPassword(user, request.Password)
-} 
+}
