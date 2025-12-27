@@ -23,6 +23,17 @@ type usersQ struct {
 	sql squirrel.StatementBuilderType
 }
 
+func (m *usersQ) GetByUserID(ctx context.Context, userID int64) (*data.User, error) {
+	query := m.sql.Select("*").
+		From(usersTableName).
+		Where("id = ?", userID).
+		PlaceholderFormat(squirrel.Dollar)
+
+	var result data.User
+	err := m.db.GetContext(ctx, &result, query)
+	return &result, err
+}
+
 func (m *usersQ) GetByUsername(ctx context.Context, username string) (*data.User, error) {
 	query := m.sql.Select("*").
 		From(usersTableName).
@@ -43,4 +54,13 @@ func (m *usersQ) Insert(ctx context.Context, user data.User) (*data.User, error)
 	var result data.User
 	err := m.db.GetContext(ctx, &result, query)
 	return &result, err
+}
+
+func (m *usersQ) UpdateRefreshToken(ctx context.Context, userID int64, refreshToken string) error {
+	query := m.sql.Update(usersTableName).
+		Set("refresh_token", refreshToken).
+		Where("id = ?", userID).
+		PlaceholderFormat(squirrel.Dollar)
+
+	return m.db.ExecContext(ctx, query)
 }

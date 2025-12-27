@@ -14,3 +14,9 @@ cop:
   upstream: "http://..."
   service_name: btc-utxo-indexer
   service_port: 80
+
+service:
+  access_token_key: "something sha256'd, has to be a 64 char long hex string"
+  access_token_expire_time: 1h or other value, see time.ParseDuration
+  refresh_token_key: "something sha256'd, has to be a 64 char long hex string"
+  refresh_token_expire_time: 8h or other value, see time.ParseDuration

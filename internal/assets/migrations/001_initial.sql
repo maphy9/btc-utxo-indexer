@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   username text UNIQUE NOT NULL,
   password_hash text NOT NULL,
+  refresh_token text NOT NULL DEFAULT '',
   created_at timestamptz DEFAULT current_timestamp
 );
 
