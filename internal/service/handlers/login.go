@@ -19,7 +19,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := helpers.VerifyUserCredentials(r, request)
+	user, err := helpers.VerifyUserCredentials(r, request.Username, request.Password)
 	if err != nil {
 		logger.WithError(err).Debug("invalid user credentials")
 		ape.RenderErr(w, apierrors.NewApiError(http.StatusForbidden, "Invalid user credentials"))

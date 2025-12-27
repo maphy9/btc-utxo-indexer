@@ -20,7 +20,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = helpers.RegisterUser(r, request)
+	err = helpers.RegisterUser(r, request.Username, request.Password)
 	if err != nil {
 		var pgErr *pq.Error
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {

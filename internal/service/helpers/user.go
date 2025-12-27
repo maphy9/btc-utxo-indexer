@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
-	"github.com/maphy9/btc-utxo-indexer/internal/service/requests"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -15,17 +14,17 @@ func UpdateUserRefreshToken(r *http.Request, userID int64, refreshToken string) 
 	return db.Users().UpdateRefreshToken(ctx, userID, refreshToken)
 }
 
-func RegisterUser(r *http.Request, request requests.RegisterRequest) error {
+func RegisterUser(r *http.Request, username, password string) error {
 	ctx := r.Context()
 	db := DB(r)
 
-	passwordHash, err := HashPassword(request.Password)
+	passwordHash, err := HashPassword(password)
 	if err != nil {
 		return err
 	}
 
 	user := data.User{
-		Username:     request.Username,
+		Username:     username,
 		PasswordHash: passwordHash,
 	}
 	_, err = db.Users().Insert(ctx, user)
@@ -41,18 +40,18 @@ func VerifyPassword(user *data.User, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 }
 
-func VerifyUserCredentials(r *http.Request, request requests.LoginRequest) (*data.User, error) {
+func VerifyUserCredentials(r *http.Request, username, password string) (*data.User, error) {
 	ctx := r.Context()
 	db := DB(r)
 
-	user, err := db.Users().GetByUsername(ctx, request.Username)
+	user, err := db.Users().GetByUsername(ctx, username)
 	if err != nil {
 		return nil, err
 	}
 	if user == nil {
 		return nil, errors.New("User doesn't exist")
 	}
-	return user, VerifyPassword(user, request.Password)
+	return user, VerifyPassword(user, password)
 }
 
 func GetUserRefreshToken(r *http.Request, userID int64) (string, error) {
