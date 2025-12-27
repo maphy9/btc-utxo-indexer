@@ -24,6 +24,7 @@ func (s *service) router() chi.Router {
 
 	r.Post("/login", handlers.Login)
 	r.Post("/register", handlers.Register)
+	r.Post("/refresh", handlers.Refresh)
 
 	r.Group(func(r chi.Router) {
 		r.Use(

@@ -11,15 +11,15 @@ import (
 func GenerateJWTTokens(r *http.Request, userID int64) (string, string, error) {
 	serviceConfig := ServiceConfig(r)
 
-	token := jwt.NewWithClaims(
+	accessToken := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"user_id": userID,
-			"exp":     time.Now().Add(serviceConfig.TokenExpireTime).Unix(),
+			"exp":     time.Now().Add(serviceConfig.AccessTokenExpireTime).Unix(),
 			"type":    "access",
 		},
 	)
-	tokenString, err := token.SignedString([]byte(serviceConfig.TokenKey))
+	tokenString, err := accessToken.SignedString([]byte(serviceConfig.AccessTokenKey))
 	if err != nil {
 		return "", "", err
 	}
@@ -40,10 +40,7 @@ func GenerateJWTTokens(r *http.Request, userID int64) (string, string, error) {
 	return tokenString, refreshTokenString, err
 }
 
-func VerifyToken(r *http.Request, tokenString string) (*jwt.Token, error) {
-	serviceConfig := ServiceConfig(r)
-	tokenKey := serviceConfig.TokenKey
-
+func verifyToken(tokenString, tokenKey string) (*jwt.Token, error) {
 	token, err := jwt.Parse(
 		tokenString,
 		func(token *jwt.Token) (any, error) {
@@ -57,8 +54,19 @@ func VerifyToken(r *http.Request, tokenString string) (*jwt.Token, error) {
 	if !token.Valid {
 		return nil, errors.New("Invalid token")
 	}
-
 	return token, nil
+}
+
+func VerifyAccessToken(r *http.Request, accessTokenString string) (*jwt.Token, error) {
+	serviceConfig := ServiceConfig(r)
+	accessTokenKey := serviceConfig.AccessTokenKey
+	return verifyToken(accessTokenString, accessTokenKey)
+}
+
+func VerifyRefreshToken(r *http.Request, refreshTokenString string) (*jwt.Token, error) {
+	serviceConfig := ServiceConfig(r)
+	refreshTokenKey := serviceConfig.RefreshTokenKey
+	return verifyToken(refreshTokenString, refreshTokenKey)
 }
 
 func GetUserIDFromToken(token *jwt.Token) (int64, error) {

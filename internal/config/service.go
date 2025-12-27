@@ -19,8 +19,8 @@ type ServiceConfiger interface {
 }
 
 type ServiceConfig struct {
-	TokenKey               string        `fig:"token_key,required"`
-	TokenExpireTime        time.Duration `fig:"token_expire_time,required"`
+	AccessTokenKey         string        `fig:"access_token_key,required"`
+	AccessTokenExpireTime  time.Duration `fig:"access_token_expire_time,required"`
 	RefreshTokenKey        string        `fig:"refresh_token_key,required"`
 	RefreshTokenExpireTime time.Duration `fig:"refresh_token_expire_time,required"`
 }

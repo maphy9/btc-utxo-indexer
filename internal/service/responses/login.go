@@ -1,12 +1,12 @@
 package responses
 
-type LoginResponse struct {
+type TokenResponse struct {
 	Token        string `json:"token"`
 	RefreshToken string `json:"refresh_token"`
 }
 
-func NewLoginResponse(token string, refreshToken string) LoginResponse {
-	return LoginResponse{
+func NewTokenResponse(token string, refreshToken string) TokenResponse {
+	return TokenResponse{
 		Token:        token,
 		RefreshToken: refreshToken,
 	}

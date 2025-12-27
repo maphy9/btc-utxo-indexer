@@ -26,7 +26,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, refreshToken, err := helpers.GenerateJWTTokens(r, user.ID)
+	accessToken, refreshToken, err := helpers.GenerateJWTTokens(r, user.ID)
 	if err != nil {
 		logger.WithError(err).Error("failed to generate tokens")
 		ape.RenderErr(w, apierrors.NewApiError(
@@ -39,10 +39,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.WithError(err).Error("failed to update the refresh token")
 		ape.RenderErr(w, apierrors.NewApiError(
-			http.StatusInternalServerError, "Failed to generate the refresh token",
+			http.StatusInternalServerError, "Failed to update the refresh token",
 		))
 		return
 	}
 
-	ape.Render(w, responses.NewLoginResponse(token, refreshToken))
+	ape.Render(w, responses.NewTokenResponse(accessToken, refreshToken))
 }

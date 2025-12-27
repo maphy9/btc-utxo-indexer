@@ -20,8 +20,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		token, err := helpers.VerifyToken(r, tokenString)
+		accessTokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		accessToken, err := helpers.VerifyAccessToken(r, accessTokenString)
 		if err != nil {
 			ape.RenderErr(w, apierrors.NewApiError(
 				http.StatusUnauthorized,
@@ -30,7 +30,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		userID, err := helpers.GetUserIDFromToken(token)
+		userID, err := helpers.GetUserIDFromToken(accessToken)
 		if err != nil {
 			ape.RenderErr(w, apierrors.NewApiError(
 				http.StatusUnauthorized,

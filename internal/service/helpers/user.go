@@ -54,3 +54,17 @@ func VerifyUserCredentials(r *http.Request, request requests.LoginRequest) (*dat
 	}
 	return user, VerifyPassword(user, request.Password)
 }
+
+func GetUserRefreshToken(r *http.Request, userID int64) (string, error) {
+	ctx := r.Context()
+	db := DB(r)
+
+	user, err := db.Users().GetByUserID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	if user == nil {
+		return "", errors.New("User doesn't exist")
+	}
+	return user.RefreshToken, nil
+}
