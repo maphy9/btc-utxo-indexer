@@ -11,7 +11,7 @@ func AddAddress(r *http.Request, addr string) error {
 	userID := UserID(r)
 	db := DB(r)
 	address := data.Address{
-		UserID: userID,
+		UserID:  userID,
 		Address: addr,
 	}
 
