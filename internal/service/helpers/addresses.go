@@ -18,3 +18,10 @@ func AddAddress(r *http.Request, addr string) error {
 	_, err := db.Addresses().Insert(ctx, address)
 	return err
 }
+
+func GetAddresses(r *http.Request) ([]data.Address, error) {
+	ctx := r.Context()
+	userID := UserID(r)
+	db := DB(r)
+	return db.Addresses().SelectByUserID(ctx, userID)
+}

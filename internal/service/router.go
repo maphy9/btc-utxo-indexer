@@ -33,6 +33,7 @@ func (s *service) router() chi.Router {
 
 		r.Get("/dummy", handlers.Dummy)
 		r.Post("/addresses", handlers.AddAddress)
+		r.Get("/addresses", handlers.GetAddresses)
 	})
 
 	return r
