@@ -13,14 +13,13 @@ import (
 
 func AddAddress(w http.ResponseWriter, r *http.Request) {
 	logger := helpers.Log(r)
-	userID := helpers.UserID(r)
 	request, err := requests.NewAddAddressRequest(r)
 	if err != nil {
 		ape.RenderErr(w, apierrors.BadRequest())
 		return
 	}
 
-	err = helpers.AddAddress(r, userID, request.Address)
+	err = helpers.AddAddress(r, request.Address)
 	if err != nil {
 		var pgErr *pq.Error
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {

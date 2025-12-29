@@ -6,8 +6,9 @@ import (
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 )
 
-func AddAddress(r *http.Request, userID int64, addr string) error {
+func AddAddress(r *http.Request, addr string) error {
 	ctx := r.Context()
+	userID := UserID(r)
 	db := DB(r)
 	address := data.Address{
 		UserID: userID,
