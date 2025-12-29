@@ -52,7 +52,7 @@ func verifyToken(tokenString, tokenKey string) (*jwt.Token, error) {
 		return nil, err
 	}
 	if !token.Valid {
-		return nil, errors.New("Invalid token")
+		return nil, errors.New("invalid token")
 	}
 	return token, nil
 }
@@ -72,11 +72,11 @@ func VerifyRefreshToken(r *http.Request, refreshTokenString string) (*jwt.Token,
 func GetUserIDFromToken(token *jwt.Token) (int64, error) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return 0, errors.New("The token doesn't have the necessary claims")
+		return 0, errors.New("the token doesn't have the necessary claims")
 	}
 	userID, ok := claims["user_id"].(float64)
 	if !ok {
-		return 0, errors.New("The token doesn't have the necessary claims")
+		return 0, errors.New("the token doesn't have the necessary claims")
 	}
 	return int64(userID), nil
 }

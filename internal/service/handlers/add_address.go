@@ -11,24 +11,29 @@ import (
 	"gitlab.com/distributed_lab/ape"
 )
 
-func Register(w http.ResponseWriter, r *http.Request) {
+func AddAddress(w http.ResponseWriter, r *http.Request) {
 	logger := helpers.Log(r)
-	request, err := requests.NewRegisterRequest(r)
+	request, err := requests.NewAddAddressRequest(r)
 	if err != nil {
 		ape.RenderErr(w, apierrors.BadRequest())
 		return
 	}
 
-	err = helpers.RegisterUser(r, request.Username, request.Password)
+	err = helpers.AddAddress(r, request.Address)
 	if err != nil {
 		var pgErr *pq.Error
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			ape.RenderErr(w, apierrors.NewApiError(http.StatusConflict, "Username taken"))
-		} else {
-			logger.WithError(err).Debug("Failed to register the user")
 			ape.RenderErr(w, apierrors.NewApiError(
-				http.StatusInternalServerError, "Failed to register the user",
+				http.StatusConflict,
+				"This address is already being tracked",
+			))
+		} else {
+			logger.WithError(err).Debug("Failed to add an address for tracking")
+			ape.RenderErr(w, apierrors.NewApiError(
+				http.StatusInternalServerError,
+				"Failed to add an address",
 			))
 		}
+		return
 	}
 }

@@ -49,7 +49,7 @@ func VerifyUserCredentials(r *http.Request, username, password string) (*data.Us
 		return nil, err
 	}
 	if user == nil {
-		return nil, errors.New("User doesn't exist")
+		return nil, errors.New("user doesn't exist")
 	}
 	return user, VerifyPassword(user, password)
 }
@@ -63,7 +63,7 @@ func GetUserRefreshToken(r *http.Request, userID int64) (string, error) {
 		return "", err
 	}
 	if user == nil {
-		return "", errors.New("User doesn't exist")
+		return "", errors.New("user doesn't exist")
 	}
 	return user.RefreshToken, nil
 }
