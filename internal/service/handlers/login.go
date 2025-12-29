@@ -14,7 +14,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	logger := helpers.Log(r)
 	request, err := requests.NewLoginRequest(r)
 	if err != nil {
-		logger.WithError(err).Debug("bad request")
 		ape.RenderErr(w, apierrors.BadRequest())
 		return
 	}

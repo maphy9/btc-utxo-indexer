@@ -30,7 +30,9 @@ func (s *service) router() chi.Router {
 		r.Use(
 			middleware.AuthMiddleware,
 		)
+
 		r.Get("/dummy", handlers.Dummy)
+		r.Post("/addresses", handlers.AddAddress)
 	})
 
 	return r

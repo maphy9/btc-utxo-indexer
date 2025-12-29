@@ -9,7 +9,7 @@ import (
 	"gitlab.com/distributed_lab/kit/pgdb"
 )
 
-const addressesTableName = "addresses"
+const addressesTableName = "tracked_addresses"
 
 func newAddressesQ(db *pgdb.DB) data.AddressesQ {
 	return &addressesQ{
