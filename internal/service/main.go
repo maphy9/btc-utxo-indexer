@@ -4,6 +4,8 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain"
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/mempool"
 	"github.com/maphy9/btc-utxo-indexer/internal/config"
 	"gitlab.com/distributed_lab/kit/copus/types"
 	"gitlab.com/distributed_lab/kit/pgdb"
@@ -26,6 +28,10 @@ func (s *service) run() error {
 	if err := s.copus.RegisterChi(r); err != nil {
 		return errors.Wrap(err, "cop failed")
 	}
+
+	manager := blockchain.NewManager()
+	manager.AddWatcher("mempool watcher", mempool.NewNode())
+	go manager.Listen()
 
 	return http.Serve(s.listener, r)
 }
