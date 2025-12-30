@@ -13,7 +13,7 @@ type AddressesQ interface {
 
 type Address struct {
 	ID        int64     `db:"id" structs:"-" json:"id"`
-	Address   string    `db:"addr" structs:"addr" json:"address"`
+	Address   string    `db:"address" structs:"address" json:"address"`
 	UserID    int64     `db:"user_id" structs:"user_id" json:"user_id"`
 	CreatedAt time.Time `db:"created_at" structs:"-" json:"created_at"`
 }

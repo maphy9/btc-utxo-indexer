@@ -8,8 +8,8 @@ type GetAddressesResponse struct {
 
 func NewGetAddressesResponse(addresses []data.Address) GetAddressesResponse {
 	response := make([]string, 0, len(addresses))
-	for _, addr := range addresses {
-		response = append(response, addr.Address)
+	for _, address := range addresses {
+		response = append(response, address.Address)
 	}
 	return GetAddressesResponse{
 		Addresses: response,
