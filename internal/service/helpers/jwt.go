@@ -2,15 +2,13 @@ package helpers
 
 import (
 	"errors"
-	"net/http"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/maphy9/btc-utxo-indexer/internal/config"
 )
 
-func GenerateJWTTokens(r *http.Request, userID int64) (string, string, error) {
-	serviceConfig := ServiceConfig(r)
-
+func GenerateJWTTokens(serviceConfig *config.ServiceConfig, userID int64) (string, string, error) {
 	accessToken := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		jwt.MapClaims{
@@ -40,7 +38,7 @@ func GenerateJWTTokens(r *http.Request, userID int64) (string, string, error) {
 	return tokenString, refreshTokenString, err
 }
 
-func verifyToken(tokenString, tokenKey string) (*jwt.Token, error) {
+func VerifyToken(tokenKey, tokenString string) (*jwt.Token, error) {
 	token, err := jwt.Parse(
 		tokenString,
 		func(token *jwt.Token) (any, error) {
@@ -55,18 +53,6 @@ func verifyToken(tokenString, tokenKey string) (*jwt.Token, error) {
 		return nil, errors.New("invalid token")
 	}
 	return token, nil
-}
-
-func VerifyAccessToken(r *http.Request, accessTokenString string) (*jwt.Token, error) {
-	serviceConfig := ServiceConfig(r)
-	accessTokenKey := serviceConfig.AccessTokenKey
-	return verifyToken(accessTokenString, accessTokenKey)
-}
-
-func VerifyRefreshToken(r *http.Request, refreshTokenString string) (*jwt.Token, error) {
-	serviceConfig := ServiceConfig(r)
-	refreshTokenKey := serviceConfig.RefreshTokenKey
-	return verifyToken(refreshTokenString, refreshTokenKey)
 }
 
 func GetUserIDFromToken(token *jwt.Token) (int64, error) {

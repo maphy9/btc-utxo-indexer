@@ -10,9 +10,13 @@ import (
 )
 
 func GetAddresses(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	logger := helpers.Log(r)
+	db := helpers.DB(r)
+	userID := helpers.UserID(r)
 
-	addresses, err := helpers.GetAddresses(r)
+
+	addresses, err := helpers.GetAddresses(ctx, db, userID)
 	if err != nil {
 		logger.WithError(err).Debug("Failed to get tracked addresses")
 		ape.RenderErr(w, apierrors.NewApiError(

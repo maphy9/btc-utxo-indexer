@@ -2,16 +2,12 @@ package helpers
 
 import (
 	"context"
-	"net/http"
 
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 )
 
-func AddAddress(r *http.Request, address string) error {
-	ctx := r.Context()
-	userID := UserID(r)
-	db := DB(r)
-	manager := Manager(r)
+func AddAddress(ctx context.Context, db data.MasterQ, manager *blockchain.Manager, userID int64, address string) error {
 	addr := data.Address{
 		UserID:  userID,
 		Address: address,
@@ -43,10 +39,7 @@ func AddAddress(r *http.Request, address string) error {
 	return err
 }
 
-func GetAddresses(r *http.Request) ([]data.Address, error) {
-	ctx := r.Context()
-	userID := UserID(r)
-	db := DB(r)
+func GetAddresses(ctx context.Context, db data.MasterQ, userID int64) ([]data.Address, error) {
 	return db.Addresses().SelectByUserID(ctx, userID)
 }
 

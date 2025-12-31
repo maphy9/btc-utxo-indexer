@@ -1,23 +1,18 @@
 package helpers
 
 import (
+	"context"
 	"errors"
-	"net/http"
 
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func UpdateUserRefreshToken(r *http.Request, userID int64, refreshToken string) error {
-	ctx := r.Context()
-	db := DB(r)
+func UpdateUserRefreshToken(ctx context.Context, db data.MasterQ, userID int64, refreshToken string) error {
 	return db.Users().UpdateRefreshToken(ctx, userID, refreshToken)
 }
 
-func RegisterUser(r *http.Request, username, password string) error {
-	ctx := r.Context()
-	db := DB(r)
-
+func RegisterUser(ctx context.Context, db data.MasterQ, username, password string) error {
 	passwordHash, err := HashPassword(password)
 	if err != nil {
 		return err
@@ -40,10 +35,7 @@ func VerifyPassword(user *data.User, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 }
 
-func VerifyUserCredentials(r *http.Request, username, password string) (*data.User, error) {
-	ctx := r.Context()
-	db := DB(r)
-
+func VerifyUserCredentials(ctx context.Context, db data.MasterQ, username, password string) (*data.User, error) {
 	user, err := db.Users().GetByUsername(ctx, username)
 	if err != nil {
 		return nil, err
@@ -54,10 +46,7 @@ func VerifyUserCredentials(r *http.Request, username, password string) (*data.Us
 	return user, VerifyPassword(user, password)
 }
 
-func GetUserRefreshToken(r *http.Request, userID int64) (string, error) {
-	ctx := r.Context()
-	db := DB(r)
-
+func GetUserRefreshToken(ctx context.Context, db data.MasterQ, userID int64) (string, error) {
 	user, err := db.Users().GetByUserID(ctx, userID)
 	if err != nil {
 		return "", err

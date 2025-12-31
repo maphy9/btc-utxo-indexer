@@ -12,14 +12,19 @@ import (
 )
 
 func AddAddress(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	logger := helpers.Log(r)
+	db := helpers.DB(r)
+	manager := helpers.Manager(r)
+	userID := helpers.UserID(r)
+
 	request, err := requests.NewAddAddressRequest(r)
 	if err != nil {
 		ape.RenderErr(w, apierrors.BadRequest())
 		return
 	}
 
-	err = helpers.AddAddress(r, request.Address)
+	err = helpers.AddAddress(ctx, db, manager, userID, request.Address)
 	if err != nil {
 		var pgErr *pq.Error
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
