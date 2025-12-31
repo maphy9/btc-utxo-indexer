@@ -23,19 +23,7 @@ func AddAddress(ctx context.Context, db data.MasterQ, manager *blockchain.Manage
 		return err
 	}
 
-	mappedUtxos := make([]data.Utxo, len(utxos), len(utxos))
-	for i, utxo := range utxos {
-		mappedUtxos[i] = data.Utxo{
-			Address:     address,
-			TxID:        utxo.TxID,
-			Vout:        utxo.Vout,
-			Value:       utxo.Value,
-			BlockHeight: utxo.BlockHeight,
-			BlockHash:   utxo.BlockHash,
-		}
-	}
-
-	_, err = db.Utxos().InsertMany(ctx, mappedUtxos)
+	_, err = db.Utxos().InsertMany(ctx, utxos)
 	return err
 }
 
