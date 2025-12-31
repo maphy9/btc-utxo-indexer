@@ -11,21 +11,25 @@ import (
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	logger := helpers.Log(r)
+	db := helpers.DB(r)
+	serviceConfig := helpers.ServiceConfig(r)
+
 	request, err := requests.NewLoginRequest(r)
 	if err != nil {
 		ape.RenderErr(w, apierrors.BadRequest())
 		return
 	}
 
-	user, err := helpers.VerifyUserCredentials(r, request.Username, request.Password)
+	user, err := helpers.VerifyUserCredentials(ctx, db, request.Username, request.Password)
 	if err != nil {
 		logger.WithError(err).Debug("invalid user credentials")
 		ape.RenderErr(w, apierrors.NewApiError(http.StatusForbidden, "Invalid user credentials"))
 		return
 	}
 
-	accessToken, refreshToken, err := helpers.GenerateJWTTokens(r, user.ID)
+	accessToken, refreshToken, err := helpers.GenerateJWTTokens(serviceConfig, user.ID)
 	if err != nil {
 		logger.WithError(err).Error("failed to generate tokens")
 		ape.RenderErr(w, apierrors.NewApiError(
@@ -34,7 +38,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = helpers.UpdateUserRefreshToken(r, user.ID, refreshToken)
+	err = helpers.UpdateUserRefreshToken(ctx, db, user.ID, refreshToken)
 	if err != nil {
 		logger.WithError(err).Error("failed to update the refresh token")
 		ape.RenderErr(w, apierrors.NewApiError(

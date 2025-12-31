@@ -11,14 +11,18 @@ import (
 )
 
 func Refresh(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	logger := helpers.Log(r)
+	db := helpers.DB(r)
+	serviceConfig := helpers.ServiceConfig(r)
+
 	request, err := requests.NewRefreshRequest(r)
 	if err != nil {
 		ape.RenderErr(w, apierrors.BadRequest())
 		return
 	}
 
-	refreshToken, err := helpers.VerifyRefreshToken(r, request.RefreshToken)
+	refreshToken, err := helpers.VerifyToken(serviceConfig.RefreshTokenKey, request.RefreshToken)
 	if err != nil {
 		ape.RenderErr(w, apierrors.NewApiError(
 			http.StatusUnauthorized,
@@ -36,7 +40,7 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	savedRefreshToken, err := helpers.GetUserRefreshToken(r, userID)
+	savedRefreshToken, err := helpers.GetUserRefreshToken(ctx, db, userID)
 	if err != nil {
 		logger.WithError(err).Debug("Could not retrieve saved refresh token")
 		ape.RenderErr(w, apierrors.NewApiError(
@@ -53,7 +57,7 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newAccessToken, newRefreshToken, err := helpers.GenerateJWTTokens(r, userID)
+	newAccessToken, newRefreshToken, err := helpers.GenerateJWTTokens(serviceConfig, userID)
 	if err != nil {
 		logger.WithError(err).Error("failed to generate tokens")
 		ape.RenderErr(w, apierrors.NewApiError(
@@ -62,7 +66,7 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = helpers.UpdateUserRefreshToken(r, userID, newRefreshToken)
+	err = helpers.UpdateUserRefreshToken(ctx, db, userID, newRefreshToken)
 	if err != nil {
 		logger.WithError(err).Error("failed to update the refresh token")
 		ape.RenderErr(w, apierrors.NewApiError(

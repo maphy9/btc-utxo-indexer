@@ -9,7 +9,10 @@ import (
 	"gitlab.com/distributed_lab/kit/pgdb"
 )
 
-const addressesTableName = "tracked_addresses"
+const (
+	addressesTableName     = "addresses"
+	userAddressesTableName = "user_addresses"
+)
 
 func newAddressesQ(db *pgdb.DB) data.AddressesQ {
 	return &addressesQ{
@@ -23,10 +26,11 @@ type addressesQ struct {
 	sql squirrel.StatementBuilderType
 }
 
-func (m *addressesQ) SelectByUserID(ctx context.Context, userID int64) ([]data.Address, error) {
-	query := m.sql.Select("*").
-		From(addressesTableName).
-		Where("user_id = ?", userID).
+func (m *addressesQ) GetUserAddresses(ctx context.Context, userID int64) ([]data.Address, error) {
+	query := m.sql.Select("a.*").
+		From(addressesTableName+" a").
+		Join(userAddressesTableName+" ua ON a.id = ua.address_id").
+		Where("ua.user_id = ?", userID).
 		PlaceholderFormat(squirrel.Dollar)
 
 	var result []data.Address
@@ -34,13 +38,41 @@ func (m *addressesQ) SelectByUserID(ctx context.Context, userID int64) ([]data.A
 	return result, err
 }
 
-func (m *addressesQ) Insert(ctx context.Context, address data.Address) (*data.Address, error) {
-	clauses := structs.Map(address)
+func (m *addressesQ) GetUserAddress(ctx context.Context, userID int64, address string) (*data.UserAddress, error) {
+	query := m.sql.Select("ua.*").
+		From(addressesTableName+" a").
+		Join(userAddressesTableName+" ua ON a.id = ua.address_id").
+		Where("user_id = ?", userID).
+		Where("a.address = ?", address).
+		PlaceholderFormat(squirrel.Dollar)
+
+	var result data.UserAddress
+	err := m.db.GetContext(ctx, &result, query)
+	return &result, err
+}
+
+func (m *addressesQ) InsertAddress(ctx context.Context, address string) (*data.Address, error) {
 	query := m.sql.Insert(addressesTableName).
+		Columns("address").
+		Values(address).
+		Suffix(`
+			ON CONFLICT (address) DO
+			UPDATE SET address = EXCLUDED.address
+			RETURNING *
+		`)
+
+	var result data.Address
+	err := m.db.GetContext(ctx, &result, query)
+	return &result, err
+}
+
+func (m *addressesQ) InsertUserAddress(ctx context.Context, userAddress data.UserAddress) (*data.UserAddress, error) {
+	clauses := structs.Map(userAddress)
+	query := m.sql.Insert(userAddressesTableName).
 		SetMap(clauses).
 		Suffix("RETURNING *")
 
-	var result data.Address
+	var result data.UserAddress
 	err := m.db.GetContext(ctx, &result, query)
 	return &result, err
 }

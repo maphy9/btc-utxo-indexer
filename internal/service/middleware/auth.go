@@ -11,6 +11,9 @@ import (
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		serviceConfig := helpers.ServiceConfig(r)
+		accessTokenKey := serviceConfig.AccessTokenKey
+
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			ape.RenderErr(w, apierrors.NewApiError(
@@ -21,7 +24,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		accessTokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		accessToken, err := helpers.VerifyAccessToken(r, accessTokenString)
+		accessToken, err := helpers.VerifyToken(accessTokenKey, accessTokenString)
 		if err != nil {
 			ape.RenderErr(w, apierrors.NewApiError(
 				http.StatusUnauthorized,
