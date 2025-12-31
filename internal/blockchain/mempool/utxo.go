@@ -1,6 +1,6 @@
 package mempool
 
-type Utxo struct {
+type RawUtxo struct {
 	TxID   string `json:"txid"`
 	Vout   uint   `json:"vout"`
 	Status struct {
