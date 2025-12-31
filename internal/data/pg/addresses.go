@@ -28,8 +28,8 @@ type addressesQ struct {
 
 func (m *addressesQ) GetUserAddresses(ctx context.Context, userID int64) ([]data.Address, error) {
 	query := m.sql.Select("a.*").
-		From(addressesTableName+" a").
-		Join(userAddressesTableName+" ua ON a.id = ua.address_id").
+		From(addressesTableName + " a").
+		Join(userAddressesTableName + " ua ON a.id = ua.address_id").
 		Where("ua.user_id = ?", userID).
 		PlaceholderFormat(squirrel.Dollar)
 

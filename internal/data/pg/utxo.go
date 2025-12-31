@@ -23,10 +23,9 @@ type utxosQ struct {
 }
 
 func (m *utxosQ) GetByAddress(ctx context.Context, address string) ([]data.Utxo, error) {
-	query := m.sql.Select("u.*").
-		From(utxosTableName+" u").
-		Join(addressesTableName+" a ON u.address_id = a.id").
-		Where("a.address = ?", address).
+	query := m.sql.Select("*").
+		From(utxosTableName).
+		Where("address = ?", address).
 		PlaceholderFormat(squirrel.Dollar)
 
 	var result []data.Utxo
@@ -41,11 +40,11 @@ func (m *utxosQ) InsertMany(ctx context.Context, utxos []data.Utxo) ([]data.Utxo
 	}
 
 	query := m.sql.Insert(utxosTableName).
-		Columns("address_id", "txid", "vout", "value", "block_height", "block_hash")
+		Columns("address", "txid", "vout", "value", "block_height", "block_hash")
 
 	for _, utxo := range utxos {
 		query = query.Values(
-			utxo.AddressID,
+			utxo.Address,
 			utxo.TxID,
 			utxo.Vout,
 			utxo.Value,

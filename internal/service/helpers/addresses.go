@@ -28,8 +28,7 @@ func AddAddress(ctx context.Context, db data.MasterQ, manager *blockchain.Manage
 			return err
 		}
 
-		mappedUtxos := blockchain.MapRawUtxos(utxos, addressEntry.ID)
-		_, err = q.Utxos().InsertMany(ctx, mappedUtxos)
+		_, err = q.Utxos().InsertMany(ctx, utxos)
 		if err != nil {
 			return errors.New("utxos insert failed during address addition")
 		}

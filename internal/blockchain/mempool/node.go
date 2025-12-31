@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/maphy9/btc-utxo-indexer/internal/blockchain"
+	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"github.com/maphy9/btc-utxo-indexer/internal/util"
 )
 
@@ -59,7 +60,7 @@ func (n *node) GetLatestBlock() (*blockchain.Block, error) {
 	return &block, nil
 }
 
-func (n *node) GetAddressUtxos(address string) ([]blockchain.RawUtxo, error) {
+func (n *node) GetAddressUtxos(address string) ([]data.Utxo, error) {
 	res, err := http.Get(fmt.Sprintf("https://mempool.space/api/address/%s/utxo", address))
 	if err != nil {
 		return nil, nil
@@ -73,11 +74,12 @@ func (n *node) GetAddressUtxos(address string) ([]blockchain.RawUtxo, error) {
 	if err != nil {
 		return nil, err
 	}
-	return mapRawUtxos(utxos), nil
+	return mapRawUtxos(utxos, address), nil
 }
 
-func mapRawUtxo(utxo RawUtxo) blockchain.RawUtxo {
-	return blockchain.RawUtxo{
+func mapRawUtxo(utxo RawUtxo, address string) data.Utxo {
+	return data.Utxo{
+		Address:     address,
 		TxID:        utxo.TxID,
 		Vout:        utxo.Vout,
 		Value:       utxo.Value,
@@ -86,10 +88,10 @@ func mapRawUtxo(utxo RawUtxo) blockchain.RawUtxo {
 	}
 }
 
-func mapRawUtxos(utxos []RawUtxo) []blockchain.RawUtxo {
-	mappedUtxos := make([]blockchain.RawUtxo, 0, len(utxos))
+func mapRawUtxos(utxos []RawUtxo, address string) []data.Utxo {
+	mappedUtxos := make([]data.Utxo, 0, len(utxos))
 	for _, utxo := range utxos {
-		mappedUtxos = append(mappedUtxos, mapRawUtxo(utxo))
+		mappedUtxos = append(mappedUtxos, mapRawUtxo(utxo, address))
 	}
 	return mappedUtxos
 }
