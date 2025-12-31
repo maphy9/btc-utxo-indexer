@@ -45,9 +45,7 @@ func (m *Manager) Listen() {
 	for {
 		m.RLock()
 		watchers := make([]watcherEntry, 0, len(m.watchers))
-		for _, watcher := range m.watchers {
-			watchers = append(watchers, watcher)
-		}
+		watchers = append(watchers, m.watchers...)
 		m.RUnlock()
 
 		for _, watcher := range watchers {

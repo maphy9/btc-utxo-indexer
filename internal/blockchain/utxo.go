@@ -14,7 +14,7 @@ func (u *RawUtxo) MapRawUtxo(addressID int64) data.Utxo {
 	return data.Utxo{
 		AddressID:   addressID,
 		TxID:        u.TxID,
-		Vout:        uint(u.Vout),
+		Vout:        u.Vout,
 		Value:       u.Value,
 		BlockHeight: u.BlockHeight,
 		BlockHash:   u.BlockHash,

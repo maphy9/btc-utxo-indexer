@@ -24,12 +24,20 @@ func (n *node) GetLatestBlock() (*blockchain.Block, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = res.Body.Close()
+	if err != nil {
+		return nil, err
+	}
 
 	res, err = http.Get(fmt.Sprintf("https://mempool.space/api/block-height/%d", height))
 	if err != nil {
 		return nil, err
 	}
 	hash, err := util.ParseString(res)
+	if err != nil {
+		return nil, err
+	}
+	err = res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +48,10 @@ func (n *node) GetLatestBlock() (*blockchain.Block, error) {
 	}
 	var block blockchain.Block
 	err = json.NewDecoder(res.Body).Decode(&block)
+	if err != nil {
+		return nil, err
+	}
+	err = res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +69,10 @@ func (n *node) GetAddressUtxos(address string) ([]blockchain.RawUtxo, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	err = res.Body.Close()
+	if err != nil {
+		return nil, err
+	}
 	return mapRawUtxos(utxos), nil
 }
 
