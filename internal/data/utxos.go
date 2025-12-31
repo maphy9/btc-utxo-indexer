@@ -5,7 +5,7 @@ import "context"
 type UtxosQ interface {
 	SelectByAddress(ctx context.Context, address string) ([]Utxo, error)
 
-	Insert(ctx context.Context, utxo Utxo) (*Utxo, error)
+	InsertMany(ctx context.Context, utxos []Utxo) ([]Utxo, error)
 }
 
 type Utxo struct {

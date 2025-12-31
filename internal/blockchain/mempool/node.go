@@ -46,3 +46,28 @@ func (n *node) GetLatestBlock() (*blockchain.Block, error) {
 	
 	return &block, nil
 }
+
+func (n *node) GetAddressUtxos(address string) ([]blockchain.Utxo, error) {
+	res, err := http.Get(fmt.Sprintf("https://mempool.space/api/address/%s/utxo", address))
+	if err != nil {
+		return nil, nil
+	}
+	var utxos []Utxo
+	err = json.NewDecoder(res.Body).Decode(&utxos)
+	if err != nil {
+		return nil, nil
+	}
+
+	mappedUtxos := make([]blockchain.Utxo, len(utxos))
+	for i, utxo := range utxos {
+		mappedUtxos[i] = blockchain.Utxo{
+			TxID: utxo.TxID,
+			Vout: utxo.Vout,
+			Value: utxo.Value,
+			BlockHeight: utxo.Status.BlockHeight,
+			BlockHash: utxo.Status.BlockHash,
+		}
+	}
+
+	return mappedUtxos, nil
+}

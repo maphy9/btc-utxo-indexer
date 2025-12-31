@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/fatih/structs"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"gitlab.com/distributed_lab/kit/pgdb"
 )
@@ -34,13 +33,28 @@ func (m *utxosQ) SelectByAddress(ctx context.Context, address string) ([]data.Ut
 	return result, err
 }
 
-func (m *utxosQ) Insert(ctx context.Context, utxo data.Utxo) (*data.Utxo, error) {
-	clauses := structs.Map(utxo)
-	query := m.sql.Insert(utxosTableName).
-		SetMap(clauses).
-		Suffix("RETURNING *")
+func (m *utxosQ) InsertMany(ctx context.Context, utxos []data.Utxo) ([]data.Utxo, error) {
+	if len(utxos) == 0 {
+		return nil, nil
+	}
 
-	var result data.Utxo
-	err := m.db.GetContext(ctx, &result, query)
-	return &result, err
+	query := m.sql.Insert(utxosTableName).
+		Columns("address", "txid", "vout", "value", "block_height", "block_hash")
+
+	for _, utxo := range utxos {
+		query = query.Values(
+			utxo.Address,
+			utxo.TxID,
+			utxo.Vout,
+			utxo.Value,
+			utxo.BlockHeight,
+			utxo.BlockHash,
+		)
+	}
+
+	query = query.Suffix("ON CONFLICT (txid, vout) DO NOTHING RETURNING *")
+
+	var result []data.Utxo
+	err := m.db.SelectContext(ctx, &result, query)
+	return result, err
 }

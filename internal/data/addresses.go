@@ -8,6 +8,8 @@ import (
 type AddressesQ interface {
 	SelectByUserID(ctx context.Context, userID int64) ([]Address, error)
 
+	CheckAddress(ctx context.Context, userID int64, address string) (*Address, error)
+
 	Insert(ctx context.Context, address Address) (*Address, error)
 }
 

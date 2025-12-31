@@ -19,6 +19,7 @@ func (s *service) router() chi.Router {
 			helpers.CtxLog(s.log),
 			helpers.CtxServiceConfig(s.serviceConfig),
 			helpers.CtxDB(pg.NewMasterQ(s.db)),
+			helpers.CtxManager(s.manager),
 		),
 	)
 
@@ -31,8 +32,11 @@ func (s *service) router() chi.Router {
 			middleware.AuthMiddleware,
 		)
 
-		r.Post("/addresses", handlers.AddAddress)
-		r.Get("/addresses", handlers.GetAddresses)
+		r.Route("/addresses", func (r chi.Router) {
+			r.Post("/", handlers.AddAddress)
+			r.Get("/", handlers.GetAddresses)
+			r.Get("/{address}/utxos", handlers.GetUtxos)
+		})
 	})
 
 	return r

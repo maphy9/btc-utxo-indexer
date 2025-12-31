@@ -44,3 +44,15 @@ func (m *addressesQ) Insert(ctx context.Context, address data.Address) (*data.Ad
 	err := m.db.GetContext(ctx, &result, query)
 	return &result, err
 }
+
+func (m *addressesQ) CheckAddress(ctx context.Context, userID int64, address string) (*data.Address, error) {
+	query := m.sql.Select("*").
+		From(addressesTableName).
+		Where("user_id = ?", userID).
+		Where("address = ?", address).
+		PlaceholderFormat(squirrel.Dollar)
+
+	var result data.Address
+	err := m.db.GetContext(ctx, &result, query)
+	return &result, err
+}

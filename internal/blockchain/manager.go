@@ -5,9 +5,10 @@ import (
 	"sync"
 )
 
-func NewManager() Manager {
-	return Manager{
+func NewManager(primaryNode Node) *Manager {
+	return &Manager{
 		watchers: make([]watcherEntry, 0, 5),
+		PrimaryNode: primaryNode,
 	}
 }
 
@@ -20,6 +21,7 @@ type watcherEntry struct {
 type Manager struct {
 	sync.RWMutex
 	watchers []watcherEntry
+	PrimaryNode Node
 }
 
 func (m *Manager) AddWatcher(tag string, node Node) {

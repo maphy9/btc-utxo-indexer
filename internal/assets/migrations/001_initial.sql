@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS utxos
   address text REFERENCES tracked_addresses (address) ON DELETE CASCADE NOT NULL,
   txid text NOT NULL,
   vout integer NOT NULL,
-  amount bigint NOT NULL,
+  value bigint NOT NULL,
   block_height integer NOT NULL,
   block_hash text NOT NULL,
   UNIQUE(txid, vout)
