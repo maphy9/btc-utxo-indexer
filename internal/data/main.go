@@ -5,5 +5,7 @@ type MasterQ interface {
 
 	Addresses() AddressesQ
 
+	Utxos() UtxosQ
+
 	Transaction(fn func(db MasterQ) error) error
 }

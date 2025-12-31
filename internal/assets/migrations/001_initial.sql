@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users
 CREATE TABLE IF NOT EXISTS tracked_addresses
 (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  address text NOT NULL,
+  address text UNIQUE NOT NULL,
   user_id bigint REFERENCES users (id) ON DELETE CASCADE NOT NULL,
   created_at timestamptz DEFAULT current_timestamp,
   UNIQUE(user_id, address)
