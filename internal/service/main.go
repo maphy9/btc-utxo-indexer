@@ -19,6 +19,7 @@ type service struct {
 	listener      net.Listener
 	serviceConfig *config.ServiceConfig
 	db            *pgdb.DB
+	manager *blockchain.Manager
 }
 
 func (s *service) run() error {
@@ -29,9 +30,8 @@ func (s *service) run() error {
 		return errors.Wrap(err, "cop failed")
 	}
 
-	manager := blockchain.NewManager()
-	manager.AddWatcher("mempool watcher", mempool.NewNode())
-	go manager.Listen()
+	s.manager.AddWatcher("mempool watcher", mempool.NewNode())
+	go s.manager.Listen()
 
 	return http.Serve(s.listener, r)
 }
@@ -43,6 +43,7 @@ func newService(cfg config.Config) *service {
 		listener:      cfg.Listener(),
 		serviceConfig: cfg.ServiceConfig(),
 		db:            cfg.DB(),
+		manager: blockchain.NewManager(mempool.NewNode()),
 	}
 }
 
