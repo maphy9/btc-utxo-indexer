@@ -56,7 +56,7 @@ func (n *node) GetAddressUtxos(address string) ([]data.Utxo, error) {
 	var utxos []RawUtxo
 	err = json.NewDecoder(res.Body).Decode(&utxos)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	return n.mapRawUtxos(utxos, address), nil
