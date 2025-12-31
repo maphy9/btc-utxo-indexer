@@ -12,7 +12,7 @@ const (
 	transactionsTableName = "transactions"
 )
 
-func NewTransactionsQ(db *pgdb.DB) data.TransactionsQ {
+func newTransactionsQ(db *pgdb.DB) data.TransactionsQ {
 	return &transactionsQ{
 		db: db,
 		sql: squirrel.StatementBuilder,
@@ -44,11 +44,9 @@ func (m *transactionsQ) InsertMany(ctx context.Context, transactions []data.Tran
 
 	query := m.sql.Insert(transactionsTableName).
 		Columns("txid", "block_height")
-
 	for _, transation := range transactions {
 		query = query.Values(transation.TxID, transation.BlockHeight)
 	}
-
 	query = query.Suffix("ON CONFLICT (txid) DO NOTHING RETURNING *")
 
 	var result []data.Transaction

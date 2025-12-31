@@ -7,5 +7,9 @@ type MasterQ interface {
 
 	Utxos() UtxosQ
 
+	Transactions() TransactionsQ
+
+	Blocks() BlocksQ
+
 	Transaction(fn func(db MasterQ) error) error
 }
