@@ -34,6 +34,7 @@ func (m *utxosQ) SelectByAddress(ctx context.Context, address string) ([]data.Ut
 }
 
 func (m *utxosQ) InsertMany(ctx context.Context, utxos []data.Utxo) ([]data.Utxo, error) {
+	// TODO: Handle insertion of > 65535 / 6 ≈ 10,922 rows
 	if len(utxos) == 0 {
 		return nil, nil
 	}
