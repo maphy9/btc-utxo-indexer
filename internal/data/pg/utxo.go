@@ -12,7 +12,7 @@ const utxosTableName = "utxos"
 
 func newUtxosQ(db *pgdb.DB) data.UtxosQ {
 	return &utxosQ{
-		db: db,
+		db:  db,
 		sql: squirrel.StatementBuilder,
 	}
 }

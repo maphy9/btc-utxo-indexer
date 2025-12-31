@@ -13,7 +13,7 @@ func NewNode() blockchain.Node {
 	return &node{}
 }
 
-type node struct {}
+type node struct{}
 
 func (n *node) GetLatestBlock() (*blockchain.Block, error) {
 	res, err := http.Get("https://mempool.space/api/blocks/tip/height")
@@ -43,7 +43,7 @@ func (n *node) GetLatestBlock() (*blockchain.Block, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &block, nil
 }
 
@@ -61,11 +61,11 @@ func (n *node) GetAddressUtxos(address string) ([]blockchain.Utxo, error) {
 	mappedUtxos := make([]blockchain.Utxo, len(utxos))
 	for i, utxo := range utxos {
 		mappedUtxos[i] = blockchain.Utxo{
-			TxID: utxo.TxID,
-			Vout: utxo.Vout,
-			Value: utxo.Value,
+			TxID:        utxo.TxID,
+			Vout:        utxo.Vout,
+			Value:       utxo.Value,
 			BlockHeight: utxo.Status.BlockHeight,
-			BlockHash: utxo.Status.BlockHash,
+			BlockHash:   utxo.Status.BlockHash,
 		}
 	}
 

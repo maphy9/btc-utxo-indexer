@@ -7,20 +7,20 @@ import (
 
 func NewManager(primaryNode Node) *Manager {
 	return &Manager{
-		watchers: make([]watcherEntry, 0, 5),
+		watchers:    make([]watcherEntry, 0, 5),
 		PrimaryNode: primaryNode,
 	}
 }
 
 type watcherEntry struct {
-	tag string
-	watcher Watcher
+	tag       string
+	watcher   Watcher
 	blockChan <-chan *Block
 }
 
 type Manager struct {
 	sync.RWMutex
-	watchers []watcherEntry
+	watchers    []watcherEntry
 	PrimaryNode Node
 }
 
@@ -29,12 +29,12 @@ func (m *Manager) AddWatcher(tag string, node Node) {
 	defer m.Unlock()
 	blockChan := make(chan *Block, 64)
 	watcher := Watcher{
-		node: node,
+		node:      node,
 		blockChan: blockChan,
 	}
 	entry := watcherEntry{
-		tag: tag,
-		watcher: watcher,
+		tag:       tag,
+		watcher:   watcher,
 		blockChan: blockChan,
 	}
 	m.watchers = append(m.watchers, entry)

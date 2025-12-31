@@ -30,12 +30,12 @@ func AddAddress(r *http.Request, address string) error {
 	mappedUtxos := make([]data.Utxo, len(utxos), len(utxos))
 	for i, utxo := range utxos {
 		mappedUtxos[i] = data.Utxo{
-			Address: address,
-			TxID: utxo.TxID,
-			Vout: utxo.Vout,
-			Value: utxo.Value,
+			Address:     address,
+			TxID:        utxo.TxID,
+			Vout:        utxo.Vout,
+			Value:       utxo.Value,
 			BlockHeight: utxo.BlockHeight,
-			BlockHash: utxo.BlockHash,
+			BlockHash:   utxo.BlockHash,
 		}
 	}
 

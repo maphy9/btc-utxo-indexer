@@ -32,7 +32,7 @@ func (s *service) router() chi.Router {
 			middleware.AuthMiddleware,
 		)
 
-		r.Route("/addresses", func (r chi.Router) {
+		r.Route("/addresses", func(r chi.Router) {
 			r.Post("/", handlers.AddAddress)
 			r.Get("/", handlers.GetAddresses)
 			r.Get("/{address}/utxos", handlers.GetUtxos)

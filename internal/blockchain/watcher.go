@@ -6,7 +6,7 @@ import (
 )
 
 type Watcher struct {
-	node Node
+	node      Node
 	blockChan chan<- *Block
 }
 

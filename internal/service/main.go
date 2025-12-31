@@ -19,7 +19,7 @@ type service struct {
 	listener      net.Listener
 	serviceConfig *config.ServiceConfig
 	db            *pgdb.DB
-	manager *blockchain.Manager
+	manager       *blockchain.Manager
 }
 
 func (s *service) run() error {
@@ -43,7 +43,7 @@ func newService(cfg config.Config) *service {
 		listener:      cfg.Listener(),
 		serviceConfig: cfg.ServiceConfig(),
 		db:            cfg.DB(),
-		manager: blockchain.NewManager(mempool.NewNode()),
+		manager:       blockchain.NewManager(mempool.NewNode()),
 	}
 }
 
