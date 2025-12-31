@@ -84,7 +84,6 @@ func mapRawUtxo(utxo RawUtxo, address string) data.Utxo {
 		Vout:        utxo.Vout,
 		Value:       utxo.Value,
 		BlockHeight: utxo.Status.BlockHeight,
-		BlockHash:   utxo.Status.BlockHash,
 	}
 }
 

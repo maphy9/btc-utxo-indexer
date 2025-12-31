@@ -40,7 +40,7 @@ func (m *utxosQ) InsertMany(ctx context.Context, utxos []data.Utxo) ([]data.Utxo
 	}
 
 	query := m.sql.Insert(utxosTableName).
-		Columns("address", "txid", "vout", "value", "block_height", "block_hash")
+		Columns("address", "txid", "vout", "value", "block_height")
 
 	for _, utxo := range utxos {
 		query = query.Values(
@@ -49,7 +49,6 @@ func (m *utxosQ) InsertMany(ctx context.Context, utxos []data.Utxo) ([]data.Utxo
 			utxo.Vout,
 			utxo.Value,
 			utxo.BlockHeight,
-			utxo.BlockHash,
 		)
 	}
 

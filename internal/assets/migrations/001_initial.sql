@@ -22,26 +22,24 @@ CREATE TABLE IF NOT EXISTS user_addresses
   UNIQUE (address_id, user_id)
 );
 
--- CREATE TABLE IF NOT EXISTS blocks (
---   height integer PRIMARY KEY,
---   hash text UNIQUE NOT NULL,
---   parent_hash text NOT NULL,
---   timestamp timestamptz NOT NULL 
--- );
+CREATE TABLE IF NOT EXISTS blocks (
+  height integer PRIMARY KEY,
+  hash text UNIQUE NOT NULL,
+  parent_hash text NOT NULL,
+  timestamp timestamptz NOT NULL 
+);
 
--- CREATE TABLE IF NOT EXISTS transactions (
---   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
---   txid text UNIQUE NOT NULL,
---   block_height integer REFERENCES blocks (height) ON DELETE CASCADE NOT NULL
--- );
+CREATE TABLE IF NOT EXISTS transactions (
+  txid text PRIMARY KEY,
+  block_height integer REFERENCES blocks (height) ON DELETE CASCADE NOT NULL,
+);
 
 CREATE TABLE IF NOT EXISTS utxos
 (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   address text REFERENCES addresses (address) ON DELETE CASCADE NOT NULL,
-  txid text NOT NULL,  -- REFERENCES transactions (txid) ON DELETE CASCADE
-  block_height integer NOT NULL,  -- REFERENCES blocks (height) ON DELETE CASCADE
-  block_hash text NOT NULL, -- REFERENCES blocks (hash) ON DELETE CASCADE
+  txid text REFERENCES transactions (txid) ON DELETE CASCADE NOT NULL,
+  block_height REFERENCES blocks (height) ON DELETE CASCADE integer NOT NULL,
   vout integer NOT NULL,
   value bigint NOT NULL,
   UNIQUE (txid, vout)

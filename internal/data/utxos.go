@@ -15,5 +15,4 @@ type Utxo struct {
 	Vout        uint   `db:"vout" structs:"vout" json:"vout"`
 	Value       int64  `db:"value" structs:"value" json:"value"`
 	BlockHeight int    `db:"block_height" structs:"block_height" json:"block_height"`
-	BlockHash   string `db:"block_hash" structs:"block_hash" json:"block_hash"`
 }
