@@ -9,19 +9,22 @@ CREATE TABLE IF NOT EXISTS users
   created_at timestamptz DEFAULT current_timestamp
 );
 
-CREATE TABLE IF NOT EXISTS tracked_addresses
+CREATE TABLE IF NOT EXISTS addresses
 (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  address text UNIQUE NOT NULL,
-  user_id bigint REFERENCES users (id) ON DELETE CASCADE NOT NULL,
-  created_at timestamptz DEFAULT current_timestamp,
-  UNIQUE(user_id, address)
+  address text UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_addresses
+(
+  address_id bigint REFERENCES addresses (id) NOT NULL,
+  user_id bigint REFERENCES users (id) ON DELETE CASCADE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS utxos
 (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  address text REFERENCES tracked_addresses (address) ON DELETE CASCADE NOT NULL,
+  address_id bigint REFERENCES addresses (id) ON DELETE CASCADE NOT NULL,
   txid text NOT NULL,
   vout integer NOT NULL,
   value bigint NOT NULL,
@@ -31,8 +34,10 @@ CREATE TABLE IF NOT EXISTS utxos
 );
 
 -- +migrate Down
-DROP TABLE IF EXISTS utxos;
+DROP TABLE IF EXISTS utxos CASCADE;
 
-DROP TABLE IF EXISTS tracked_addresses CASCADE;
+DROP TABLE IF EXISTS user_addresses CASCADE;
+
+DROP TABLE IF EXISTS addresses CASCADE;
 
 DROP TABLE IF EXISTS users CASCADE;

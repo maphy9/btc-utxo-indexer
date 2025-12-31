@@ -7,5 +7,5 @@ import (
 )
 
 func GetUtxos(ctx context.Context, db data.MasterQ, address string) ([]data.Utxo, error) {
-	return db.Utxos().SelectByAddress(ctx, address)
+	return db.Utxos().GetByAddress(ctx, address)
 }

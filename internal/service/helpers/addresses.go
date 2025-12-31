@@ -14,18 +14,22 @@ func AddAddress(ctx context.Context, db data.MasterQ, manager *blockchain.Manage
 		return err
 	}
 
-	addrEntry := data.Address{
-		UserID:  userID,
-		Address: address,
-	}
-
 	return db.Transaction(func(q data.MasterQ) error {
-		_, err := q.Addresses().Insert(ctx, addrEntry)
+		addressEntry, err := q.Addresses().InsertAddress(ctx, address)
 		if err != nil {
 			return err
 		}
 
-		_, err = q.Utxos().InsertMany(ctx, utxos)
+		_, err = q.Addresses().InsertUserAddress(ctx, data.UserAddress{
+			AddressID: addressEntry.ID,
+			UserID:    userID,
+		})
+		if err != nil {
+			return err
+		}
+
+		mappedUtxos := blockchain.MapRawUtxos(utxos, addressEntry.ID)
+		_, err = q.Utxos().InsertMany(ctx, mappedUtxos)
 		if err != nil {
 			return errors.New("utxos insert failed during address addition")
 		}
@@ -35,13 +39,13 @@ func AddAddress(ctx context.Context, db data.MasterQ, manager *blockchain.Manage
 }
 
 func GetAddresses(ctx context.Context, db data.MasterQ, userID int64) ([]data.Address, error) {
-	return db.Addresses().SelectByUserID(ctx, userID)
+	return db.Addresses().GetUserAddresses(ctx, userID)
 }
 
 func CheckAddress(ctx context.Context, db data.MasterQ, userID int64, address string) (bool, error) {
-	addr, err := db.Addresses().CheckAddress(ctx, userID, address)
+	userAddress, err := db.Addresses().GetUserAddress(ctx, userID, address)
 	if err != nil {
 		return false, err
 	}
-	return addr != nil, nil
+	return userAddress != nil, nil
 }

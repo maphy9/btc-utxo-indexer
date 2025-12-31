@@ -2,20 +2,24 @@ package data
 
 import (
 	"context"
-	"time"
 )
 
 type AddressesQ interface {
-	SelectByUserID(ctx context.Context, userID int64) ([]Address, error)
+	GetUserAddresses(ctx context.Context, userID int64) ([]Address, error)
 
-	CheckAddress(ctx context.Context, userID int64, address string) (*Address, error)
+	GetUserAddress(ctx context.Context, userID int64, address string) (*UserAddress, error)
 
-	Insert(ctx context.Context, address Address) (*Address, error)
+	InsertAddress(ctx context.Context, address string) (*Address, error)
+
+	InsertUserAddress(ctx context.Context, userAddress UserAddress) (*UserAddress, error)
 }
 
 type Address struct {
-	ID        int64     `db:"id" structs:"-" json:"id"`
-	Address   string    `db:"address" structs:"address" json:"address"`
-	UserID    int64     `db:"user_id" structs:"user_id" json:"user_id"`
-	CreatedAt time.Time `db:"created_at" structs:"-" json:"created_at"`
+	ID      int64  `db:"id" structs:"-" json:"id"`
+	Address string `db:"address" structs:"address" json:"address"`
+}
+
+type UserAddress struct {
+	AddressID int64 `db:"address_id" structs:"address_id"`
+	UserID    int64 `db:"user_id" structs:"user_id"`
 }
