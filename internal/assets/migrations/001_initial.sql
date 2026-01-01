@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS users
 CREATE TABLE IF NOT EXISTS addresses
 (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  address text UNIQUE NOT NULL
+  address text UNIQUE NOT NULL,
+  status text NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS user_addresses

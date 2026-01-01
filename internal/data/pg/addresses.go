@@ -76,3 +76,25 @@ func (m *addressesQ) InsertUserAddress(ctx context.Context, userAddress data.Use
 	err := m.db.GetContext(ctx, &result, query)
 	return &result, err
 }
+
+func (m *addressesQ) UpdateStatus(address, status string) (string, error) {
+	var oldStatus string
+	err := m.db.Transaction(func() error {
+		stmt := m.sql.Select("status").
+			From(addressesTableName).
+			Where(squirrel.Eq{"address": address}).
+			Suffix("FOR UPDATE")
+
+		if err := m.db.Get(&oldStatus, stmt); err != nil {
+			return err
+		}
+
+		update := m.sql.Update(addressesTableName).
+			Set("status", status).
+			Where(squirrel.Eq{"address": address})
+
+		err := m.db.Exec(update)
+		return err
+	})
+	return oldStatus, err
+}

@@ -23,7 +23,7 @@ func AddAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = helpers.AddAddress(ctx, db, manager, userID, request.Address)
+	err = helpers.AddAddress(ctx, db, userID, request.Address)
 	if err != nil {
 		if util.IsUniqueViolation(err) {
 			ape.RenderErr(w, apierrors.NewApiError(
@@ -31,12 +31,21 @@ func AddAddress(w http.ResponseWriter, r *http.Request) {
 				"This address is already being tracked",
 			))
 		} else {
-			logger.WithError(err).Debug("Failed to add an address for tracking")
+			logger.WithError(err).Debug("failed to add an address for tracking")
 			ape.RenderErr(w, apierrors.NewApiError(
 				http.StatusInternalServerError,
 				"Failed to add an address",
 			))
 		}
+		return
+	}
+
+	if err := manager.SubscribeAddress(request.Address); err != nil {
+		logger.WithError(err).Error("failed to subscribe to an address")
+		ape.RenderErr(w, apierrors.NewApiError(
+			http.StatusInternalServerError,
+			"Failed to subscribe to an address",
+		))
 		return
 	}
 }

@@ -12,11 +12,14 @@ type AddressesQ interface {
 	InsertAddress(ctx context.Context, address string) (*Address, error)
 
 	InsertUserAddress(ctx context.Context, userAddress UserAddress) (*UserAddress, error)
+
+	UpdateStatus(address, status string) (string, error)
 }
 
 type Address struct {
-	ID      int64  `db:"id" structs:"-" json:"id"`
+	ID      int64  `db:"id" structs:"-" json:"-"`
 	Address string `db:"address" structs:"address" json:"address"`
+	Status  string `db:"status" structs:"-" json:"-"`
 }
 
 type UserAddress struct {
