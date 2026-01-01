@@ -13,16 +13,34 @@ func NewManager(nodeAddr string, db data.MasterQ) (*Manager, error) {
 		return nil, err
 	}
 
-	manager := &Manager{
+	m := &Manager{
 		client: client,
 		db:     db,
 	}
-	return manager, nil
+	if err := m.subscribeToAllAddresses(); err != nil {
+		return nil, err
+	}
+
+	return m, nil
 }
 
 type Manager struct {
 	client *electrum.Client
 	db     data.MasterQ
+}
+
+func (m *Manager) subscribeToAllAddresses() error {
+	addresses, err := m.db.Addresses().GetAllAddresses()
+	if err != nil {
+		return err
+	}
+
+	for _, address := range addresses {
+		if err := m.SubscribeAddress(address); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (m *Manager) SubscribeAddress(address string) error {

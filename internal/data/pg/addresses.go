@@ -51,6 +51,15 @@ func (m *addressesQ) GetUserAddress(ctx context.Context, userID int64, address s
 	return &result, err
 }
 
+func (m *addressesQ) GetAllAddresses() ([]string, error) {
+	query := m.sql.Select("address").
+		From(addressesTableName)
+	
+	var result []string
+	err := m.db.Select(&result, query)
+	return result, err
+}
+
 func (m *addressesQ) InsertAddress(ctx context.Context, address string) (*data.Address, error) {
 	query := m.sql.Insert(addressesTableName).
 		Columns("address").
