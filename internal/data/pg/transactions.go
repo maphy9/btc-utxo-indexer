@@ -28,7 +28,7 @@ func (m *transactionsQ) GetByAddress(ctx context.Context, address string) ([]dat
 	query := m.sql.Select("t.*").
 		Distinct().
 		From(transactionsTableName+" t").
-		Join(utxosTableName+" u ON t.txid = u.txid").
+		Join(utxosTableName+" u ON t.tx_hash = u.tx_hash").
 		Where("u.address = ?", address).
 		PlaceholderFormat(squirrel.Dollar)
 
@@ -43,11 +43,11 @@ func (m *transactionsQ) InsertMany(ctx context.Context, transactions []data.Tran
 	}
 
 	query := m.sql.Insert(transactionsTableName).
-		Columns("txid", "block_height")
+		Columns("tx_hash", "height")
 	for _, transation := range transactions {
-		query = query.Values(transation.TxID, transation.BlockHeight)
+		query = query.Values(transation.TxHash, transation.Height)
 	}
-	query = query.Suffix("ON CONFLICT (txid) DO NOTHING RETURNING *")
+	query = query.Suffix("ON CONFLICT (tx_hash) DO NOTHING RETURNING *")
 
 	var result []data.Transaction
 	err := m.db.SelectContext(ctx, &result, query)

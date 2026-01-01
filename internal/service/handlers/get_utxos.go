@@ -34,7 +34,7 @@ func GetUtxos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utxos, err := helpers.GetUtxos(ctx, db, address)
+	utxos, err := db.Utxos().GetByAddress(ctx, address)
 	if err != nil {
 		logger.WithError(err).Error("failed to get utxos")
 		ape.RenderErr(w, apierrors.NewApiError(

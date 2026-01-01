@@ -40,19 +40,19 @@ func (m *utxosQ) InsertMany(ctx context.Context, utxos []data.Utxo) ([]data.Utxo
 	}
 
 	query := m.sql.Insert(utxosTableName).
-		Columns("address", "txid", "vout", "value", "block_height")
+		Columns("address", "tx_hash", "tx_pos", "value", "height")
 
 	for _, utxo := range utxos {
 		query = query.Values(
 			utxo.Address,
-			utxo.TxID,
-			utxo.Vout,
+			utxo.TxHash,
+			utxo.TxPos,
 			utxo.Value,
-			utxo.BlockHeight,
+			utxo.Height,
 		)
 	}
 
-	query = query.Suffix("ON CONFLICT (txid, vout) DO NOTHING RETURNING *")
+	query = query.Suffix("ON CONFLICT (tx_hash, tx_pos) DO NOTHING RETURNING *")
 
 	var result []data.Utxo
 	err := m.db.SelectContext(ctx, &result, query)

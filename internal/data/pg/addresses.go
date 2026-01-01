@@ -54,7 +54,7 @@ func (m *addressesQ) GetUserAddress(ctx context.Context, userID int64, address s
 func (m *addressesQ) GetAllAddresses() ([]string, error) {
 	query := m.sql.Select("address").
 		From(addressesTableName)
-	
+
 	var result []string
 	err := m.db.Select(&result, query)
 	return result, err

@@ -9,10 +9,9 @@ type UtxosQ interface {
 }
 
 type Utxo struct {
-	ID          int64  `db:"id" structs:"-" json:"-"`
-	Address     string `db:"address" structs:"address" json:"-"`
-	TxID        string `db:"txid" structs:"txid" json:"txid"`
-	Vout        uint   `db:"vout" structs:"vout" json:"vout"`
-	Value       int64  `db:"value" structs:"value" json:"value"`
-	BlockHeight int    `db:"block_height" structs:"block_height" json:"block_height"`
+	Address string `db:"address" structs:"address" json:"-"`
+	TxHash  string `db:"tx_hash" structs:"tx_hash" json:"tx_hash"`
+	TxPos   uint   `db:"tx_pos" structs:"tx_pos" json:"tx_pos"`
+	Value   int64  `db:"value" structs:"value" json:"value"`
+	Height  int    `db:"height" structs:"height" json:"height"`
 }

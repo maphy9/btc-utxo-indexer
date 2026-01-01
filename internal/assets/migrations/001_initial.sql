@@ -31,19 +31,18 @@ CREATE TABLE IF NOT EXISTS blocks (
 );
 
 CREATE TABLE IF NOT EXISTS transactions (
-  txid text PRIMARY KEY,
-  block_height integer REFERENCES blocks (height) ON DELETE CASCADE NOT NULL
+  tx_hash text PRIMARY KEY,
+  height integer REFERENCES blocks (height) ON DELETE CASCADE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS utxos
 (
-  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   address text REFERENCES addresses (address) ON DELETE CASCADE NOT NULL,
-  txid text REFERENCES transactions (txid) ON DELETE CASCADE NOT NULL,
-  block_height integer REFERENCES blocks (height) ON DELETE CASCADE NOT NULL,
-  vout integer NOT NULL,
+  tx_hash text REFERENCES transactions (tx_hash) ON DELETE CASCADE NOT NULL,
+  height integer REFERENCES blocks (height) ON DELETE CASCADE NOT NULL,
+  tx_pos integer NOT NULL,
   value bigint NOT NULL,
-  UNIQUE (txid, vout)
+  UNIQUE (tx_hash, tx_pos)
 );
 
 -- +migrate Down
