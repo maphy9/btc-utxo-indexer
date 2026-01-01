@@ -1,56 +1,36 @@
 package blockchain
 
 import (
-	"fmt"
-	"sync"
+	"log"
+
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
 )
 
-func NewManager(primaryNode Node) *Manager {
-	return &Manager{
-		watchers:    make([]watcherEntry, 0, 5),
-		PrimaryNode: primaryNode,
+func NewManager(nodeAddr string) (*Manager, error) {
+	client, err := electrum.NewClient(nodeAddr)
+	if err != nil {
+		return nil, err
 	}
-}
 
-type watcherEntry struct {
-	tag       string
-	watcher   Watcher
-	blockChan <-chan *Block
+	manager := &Manager{Client: client}
+	return manager, nil
 }
 
 type Manager struct {
-	sync.RWMutex
-	watchers    []watcherEntry
-	PrimaryNode Node
+	Client *electrum.Client
 }
 
-func (m *Manager) AddWatcher(tag string, node Node) {
-	m.Lock()
-	defer m.Unlock()
-	blockChan := make(chan *Block, 64)
-	watcher := Watcher{
-		node:      node,
-		blockChan: blockChan,
+func (m *Manager) WatchAddress(address string) error {
+	notifyChan, err := m.Client.Subscribe(address)
+	if err != nil {
+		return err
 	}
-	entry := watcherEntry{
-		tag:       tag,
-		watcher:   watcher,
-		blockChan: blockChan,
-	}
-	m.watchers = append(m.watchers, entry)
-	go entry.watcher.Watch()
-}
 
-func (m *Manager) Listen() {
-	for {
-		m.RLock()
-		watchers := make([]watcherEntry, 0, len(m.watchers))
-		watchers = append(watchers, m.watchers...)
-		m.RUnlock()
-
-		for _, watcher := range watchers {
-			newBlock := <-watcher.blockChan
-			fmt.Printf("Latest block (%s): %v\n", watcher.tag, newBlock)
+	go func() {
+		for status := range notifyChan {
+			log.Printf("NOTIFICATION for %s!!! status: %s", address, status)
 		}
-	}
+	}()
+
+	return nil
 }

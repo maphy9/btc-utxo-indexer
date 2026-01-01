@@ -15,6 +15,7 @@ func AddAddress(w http.ResponseWriter, r *http.Request) {
 	logger := helpers.Log(r)
 	db := helpers.DB(r)
 	userID := helpers.UserID(r)
+	manager := helpers.Manager(r)
 
 	request, err := requests.NewAddAddressRequest(r)
 	if err != nil {
@@ -22,7 +23,7 @@ func AddAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = helpers.AddAddress(ctx, db, userID, request.Address)
+	err = helpers.AddAddress(ctx, db, manager, userID, request.Address)
 	if err != nil {
 		if util.IsUniqueViolation(err) {
 			ape.RenderErr(w, apierrors.NewApiError(

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain"
 	"github.com/maphy9/btc-utxo-indexer/internal/config"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"gitlab.com/distributed_lab/logan/v3"
@@ -16,6 +17,7 @@ const (
 	serviceConfigCtxKey
 	dbCtxKey
 	userIDCtxKey
+	managerCtxKey
 )
 
 func CtxLog(entry *logan.Entry) func(context.Context) context.Context {
@@ -42,6 +44,12 @@ func CtxUserID(userID int64) func(context.Context) context.Context {
 	}
 }
 
+func CtxManager(manager *blockchain.Manager) func(context.Context) context.Context {
+	return func(ctx context.Context) context.Context {
+		return context.WithValue(ctx, managerCtxKey, manager)
+	}
+}
+
 func Log(r *http.Request) *logan.Entry {
 	return r.Context().Value(logCtxKey).(*logan.Entry)
 }
@@ -56,4 +64,8 @@ func DB(r *http.Request) data.MasterQ {
 
 func UserID(r *http.Request) int64 {
 	return r.Context().Value(userIDCtxKey).(int64)
+}
+
+func Manager(r *http.Request) *blockchain.Manager {
+	return r.Context().Value(managerCtxKey).(*blockchain.Manager)
 }

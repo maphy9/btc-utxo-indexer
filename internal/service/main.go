@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain"
 	"github.com/maphy9/btc-utxo-indexer/internal/config"
 	"gitlab.com/distributed_lab/kit/copus/types"
 	"gitlab.com/distributed_lab/kit/pgdb"
@@ -17,6 +18,7 @@ type service struct {
 	listener      net.Listener
 	serviceConfig *config.ServiceConfig
 	db            *pgdb.DB
+	manager       *blockchain.Manager
 }
 
 func (s *service) run() error {
@@ -30,18 +32,27 @@ func (s *service) run() error {
 	return http.Serve(s.listener, r)
 }
 
-func newService(cfg config.Config) *service {
+func newService(cfg config.Config) (*service, error) {
+	manager, err := blockchain.NewManager("electrum.blockstream.info:50002")
+	if err != nil {
+		return nil, err
+	}
 	return &service{
 		log:           cfg.Log(),
 		copus:         cfg.Copus(),
 		listener:      cfg.Listener(),
 		serviceConfig: cfg.ServiceConfig(),
 		db:            cfg.DB(),
-	}
+		manager:       manager,
+	}, nil
 }
 
 func Run(cfg config.Config) {
-	if err := newService(cfg).run(); err != nil {
+	service, err := newService(cfg)
+	if err != nil {
+		panic(err)
+	}
+	if err := service.run(); err != nil {
 		panic(err)
 	}
 }
