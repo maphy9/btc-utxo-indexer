@@ -76,21 +76,3 @@ func (n *node) GetAddressUtxos(address string) ([]data.Utxo, error) {
 	}
 	return mapRawUtxos(utxos, address), nil
 }
-
-func mapRawUtxo(utxo RawUtxo, address string) data.Utxo {
-	return data.Utxo{
-		Address:     address,
-		TxID:        utxo.TxID,
-		Vout:        utxo.Vout,
-		Value:       utxo.Value,
-		BlockHeight: utxo.Status.BlockHeight,
-	}
-}
-
-func mapRawUtxos(utxos []RawUtxo, address string) []data.Utxo {
-	mappedUtxos := make([]data.Utxo, 0, len(utxos))
-	for _, utxo := range utxos {
-		mappedUtxos = append(mappedUtxos, mapRawUtxo(utxo, address))
-	}
-	return mappedUtxos
-}

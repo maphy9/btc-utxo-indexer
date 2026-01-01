@@ -9,6 +9,6 @@ type TransactionsQ interface {
 }
 
 type Transaction struct {
-	TxID string `db:"txid" structs:"txid" json:"txid"`
-	BlockHeight int `db:"block_height" structs:"block_height" json:"block_height"`
+	TxID        string `db:"txid" structs:"txid" json:"txid"`
+	BlockHeight int    `db:"block_height" structs:"block_height" json:"block_height"`
 }

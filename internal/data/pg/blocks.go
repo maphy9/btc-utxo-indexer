@@ -14,13 +14,13 @@ const (
 
 func newBlocksQ(db *pgdb.DB) data.BlocksQ {
 	return &blocksQ{
-		db: db,
+		db:  db,
 		sql: squirrel.StatementBuilder,
 	}
 }
 
 type blocksQ struct {
-	db *pgdb.DB
+	db  *pgdb.DB
 	sql squirrel.StatementBuilderType
 }
 
