@@ -19,7 +19,6 @@ func (s *service) router() chi.Router {
 			helpers.CtxLog(s.log),
 			helpers.CtxServiceConfig(s.serviceConfig),
 			helpers.CtxDB(pg.NewMasterQ(s.db)),
-			helpers.CtxManager(s.manager),
 		),
 	)
 

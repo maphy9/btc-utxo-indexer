@@ -2,18 +2,11 @@ package helpers
 
 import (
 	"context"
-	"errors"
 
-	"github.com/maphy9/btc-utxo-indexer/internal/blockchain"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 )
 
-func AddAddress(ctx context.Context, db data.MasterQ, manager *blockchain.Manager, userID int64, address string) error {
-	utxos, err := manager.PrimaryNode.GetAddressUtxos(address)
-	if err != nil || utxos == nil {
-		return err
-	}
-
+func AddAddress(ctx context.Context, db data.MasterQ, userID int64, address string) error {
 	return db.Transaction(func(q data.MasterQ) error {
 		addressEntry, err := q.Addresses().InsertAddress(ctx, address)
 		if err != nil {
@@ -24,16 +17,8 @@ func AddAddress(ctx context.Context, db data.MasterQ, manager *blockchain.Manage
 			AddressID: addressEntry.ID,
 			UserID:    userID,
 		})
-		if err != nil {
-			return err
-		}
-
-		_, err = q.Utxos().InsertMany(ctx, utxos)
-		if err != nil {
-			return errors.New("utxos insert failed during address addition")
-		}
-
-		return nil
+		
+		return err
 	})
 }
 
