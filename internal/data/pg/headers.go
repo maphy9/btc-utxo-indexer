@@ -7,27 +7,27 @@ import (
 )
 
 const (
-	blocksTableName = "blocks"
+	headersTableName = "headers"
 )
 
-func newBlocksQ(db *pgdb.DB) data.BlocksQ {
-	return &blocksQ{
+func newHeadersQ(db *pgdb.DB) data.HeadersQ {
+	return &headersQ{
 		db:  db,
 		sql: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
 	}
 }
 
-type blocksQ struct {
+type headersQ struct {
 	db  *pgdb.DB
 	sql squirrel.StatementBuilderType
 }
 
-func (m *blocksQ) GetByHeight(height int) (*data.Block, error) {
+func (m *headersQ) GetByHeight(height int) (*data.Header, error) {
 	query := m.sql.Select("*").
-		From(blocksTableName).
+		From(headersTableName).
 		Where("height = ?", height)
 
-	var result data.Block
+	var result data.Header
 	err := m.db.Get(&result, query)
 	return &result, err
 }

@@ -27,15 +27,15 @@ func (m *Manager) synchronizeHistory(address string) error {
 			return nil
 		}
 
-		block, err := m.db.Blocks().GetByHeight(txHdr.Height)
+		hdr, err := m.db.Headers().GetByHeight(txHdr.Height)
 		if err != nil {
 			return err
 		}
-		if block == nil {
-			continue // Block is out of sync
+		if hdr == nil {
+			continue // Header is out of sync
 		}
 
-		if !util.VerifyMerkleProof(txMerkle.Merkle, txHdr.TxHash, txMerkle.Pos, block.Root) {
+		if !util.VerifyMerkleProof(txMerkle.Merkle, txHdr.TxHash, txMerkle.Pos, hdr.Root) {
 			continue
 		}
 
@@ -43,7 +43,7 @@ func (m *Manager) synchronizeHistory(address string) error {
 		m.db.Transactions().Insert(txHdr.ToData())
 
 		for _, in := range tx.Vin {
-			err = m.db.Utxos().Spend(in.TxID, in.Vout, block.Height)
+			err = m.db.Utxos().Spend(in.TxID, in.Vout, hdr.Height)
 			if err != nil {
 				return err
 			}
@@ -59,7 +59,7 @@ func (m *Manager) synchronizeHistory(address string) error {
 				continue // Address is not tracked
 			}
 
-			_, err = m.db.Utxos().Insert(out.ToData(txHdr.TxHash, block.Height))
+			_, err = m.db.Utxos().Insert(out.ToData(txHdr.TxHash, hdr.Height))
 			if err != nil {
 				return err
 			}

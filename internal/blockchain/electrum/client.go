@@ -4,19 +4,17 @@ import (
 	"bufio"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"log"
 	"net"
 	"sync"
-
-	"github.com/maphy9/btc-utxo-indexer/internal/util"
 )
 
 type Client struct {
 	conn      net.Conn
 	nextID    uint64
 	responses map[uint64]chan response
-	subs      map[string]chan string
+	addrSubs  map[string]chan string
+	hdrsSub   chan Header
 	mu        sync.Mutex
 }
 
@@ -31,7 +29,8 @@ func NewClient(nodeAddr string) (*Client, error) {
 	c := &Client{
 		conn:      conn,
 		responses: make(map[uint64]chan response),
-		subs:      make(map[string]chan string),
+		addrSubs:  make(map[string]chan string),
+		hdrsSub:   make(chan Header, 10),
 	}
 
 	go c.listen()
@@ -53,16 +52,12 @@ func (c *Client) listen() {
 		}
 
 		if res.ID == 0 && res.Method == "blockchain.scripthash.subscribe" {
-			scripthash := res.Params[0].(string)
-			status := res.Params[1].(string)
-			c.mu.Lock()
-			if ch, ok := c.subs[scripthash]; ok {
-				select {
-				case ch <- status:
-				default:
-				}
-			}
-			c.mu.Unlock()
+			c.addressNotification(res)
+			continue
+		}
+
+		if res.ID == 0 && res.Method == "blockchain.headers.subscribe" {
+			c.headerNotification(res)
 			continue
 		}
 
@@ -73,39 +68,4 @@ func (c *Client) listen() {
 		}
 		c.mu.Unlock()
 	}
-}
-
-func (c *Client) Subscribe(address string) (<-chan string, error) {
-	scripthash, err := util.AddressToScripthash(address)
-	if err != nil {
-		return nil, err
-	}
-
-	c.mu.Lock()
-	if _, ok := c.subs[scripthash]; ok {
-		c.mu.Unlock()
-		return nil, errors.New("already subscribed")
-	}
-	notifyChan := make(chan string, 10)
-	c.subs[scripthash] = notifyChan
-	c.mu.Unlock()
-
-	rawStatus, err := c.request("blockchain.scripthash.subscribe", []any{scripthash})
-	if err != nil {
-		c.mu.Lock()
-		delete(c.subs, scripthash)
-		c.mu.Unlock()
-		return nil, err
-	}
-
-	var status *string
-	if err := json.Unmarshal(rawStatus, &status); err != nil {
-		return nil, err
-	}
-
-	if status != nil {
-		notifyChan <- *status
-	}
-
-	return notifyChan, nil
 }

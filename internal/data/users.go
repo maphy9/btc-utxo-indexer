@@ -7,11 +7,8 @@ import (
 
 type UsersQ interface {
 	GetByUserID(ctx context.Context, userID int64) (*User, error)
-
 	GetByUsername(ctx context.Context, username string) (*User, error)
-
 	Insert(ctx context.Context, user User) (*User, error)
-
 	UpdateRefreshToken(ctx context.Context, userID int64, refreshToken string) error
 }
 

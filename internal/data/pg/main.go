@@ -29,8 +29,8 @@ func (m *masterQ) Transactions() data.TransactionsQ {
 	return newTransactionsQ(m.db)
 }
 
-func (m *masterQ) Blocks() data.BlocksQ {
-	return newBlocksQ(m.db)
+func (m *masterQ) Headers() data.HeadersQ {
+	return newHeadersQ(m.db)
 }
 
 func (m *masterQ) Transaction(fn func(q data.MasterQ) error) error {
