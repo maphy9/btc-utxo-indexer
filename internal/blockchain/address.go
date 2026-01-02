@@ -9,14 +9,14 @@ func (m *Manager) subscribeSavedAddresses() error {
 	}
 
 	for _, address := range addresses {
-		if err := m.subscribeAddress(address); err != nil {
+		if err := m.SubscribeAddress(address); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (m *Manager) subscribeAddress(address string) error {
+func (m *Manager) SubscribeAddress(address string) error {
 	notifyChan, err := m.client.SubscribeAddress(address)
 	if err != nil {
 		log.Printf("Failed to subscribe to an address: %v", err)

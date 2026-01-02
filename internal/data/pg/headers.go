@@ -31,3 +31,12 @@ func (m *headersQ) GetByHeight(height int) (*data.Header, error) {
 	err := m.db.Get(&result, query)
 	return &result, err
 }
+
+func (m *headersQ) 	GetMaxHeight() (int, error) {
+	query := m.sql.Select("COALESCE(MAX(height), -1)").
+		From(headersTableName)
+
+	var result int
+	err := m.db.Get(&result, query)
+	return result, err
+}
