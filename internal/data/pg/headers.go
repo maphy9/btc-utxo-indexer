@@ -2,7 +2,6 @@ package pg
 
 import (
 	"github.com/Masterminds/squirrel"
-	"github.com/fatih/structs"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"gitlab.com/distributed_lab/kit/pgdb"
 )
@@ -42,13 +41,17 @@ func (m *headersQ) GetMaxHeight() (int, error) {
 	return result, err
 }
 
-func (m *headersQ) Insert(hdr data.Header) (*data.Header, error) {
-	clauses := structs.Map(hdr)
-	query := m.sql.Insert(headersTableName).
-		SetMap(clauses).
-		Suffix("RETURNING *")
+func (m *headersQ) InsertBatch(hdrs []data.Header) error {
+	if len(hdrs) == 0 {
+		return nil
+	}
 
-	var result data.Header
-	err := m.db.Get(&result, query)
-	return &result, err
+	query := m.sql.Insert(headersTableName).
+		Columns("height", "hash", "parent_hash", "root")
+
+	for _, hdr := range hdrs {
+		query = query.Values(hdr.Height, hdr.Hash, hdr.ParentHash, hdr.Root)
+	}
+
+	return m.db.Exec(query)
 }
