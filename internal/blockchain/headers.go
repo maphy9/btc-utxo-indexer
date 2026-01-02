@@ -1,6 +1,10 @@
 package blockchain
 
-import "log"
+import (
+	"log"
+
+	"github.com/maphy9/btc-utxo-indexer/internal/util"
+)
 
 const (
 	chunkSize = 2016
@@ -12,20 +16,23 @@ func (m *Manager) SyncHeaders() error {
 		return err
 	}
 
-	tipHeader, err := m.client.GetTipHeader()
+	tipHeight, err := m.client.GetTipHeight()
 	if err != nil {
 		return err
 	}
 
-	for height := localHeight + 1; height <= tipHeader.Height; height += chunkSize {
-		rawHdrs, err := m.client.GetHeaders(height, chunkSize)
+	for height := localHeight + 1; height <= tipHeight; height += chunkSize {
+		hdrs, err := m.client.GetHeaders(height, chunkSize)
 		if err != nil {
 			return err
 		}
 
-		hdrs := rawHdrs.ToData()
 		for _, hdr := range hdrs {
-			_, err = m.db.Headers().Insert(hdr)
+			dataHdr, err := util.ParseHeaderHex(hdr.Hex, hdr.Height)
+			if err != nil {
+				return err
+			}
+			_, err = m.db.Headers().Insert(dataHdr)
 			if err != nil {
 				return err
 			}

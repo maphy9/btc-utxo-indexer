@@ -3,6 +3,7 @@ package data
 type HeadersQ interface {
 	GetByHeight(height int) (*Header, error)
 	GetMaxHeight() (int, error)
+	Insert(hdr Header) (*Header, error)
 }
 
 type Header struct {

@@ -2,6 +2,7 @@ package pg
 
 import (
 	"github.com/Masterminds/squirrel"
+	"github.com/fatih/structs"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"gitlab.com/distributed_lab/kit/pgdb"
 )
@@ -32,11 +33,22 @@ func (m *headersQ) GetByHeight(height int) (*data.Header, error) {
 	return &result, err
 }
 
-func (m *headersQ) 	GetMaxHeight() (int, error) {
+func (m *headersQ) GetMaxHeight() (int, error) {
 	query := m.sql.Select("COALESCE(MAX(height), -1)").
 		From(headersTableName)
 
 	var result int
 	err := m.db.Get(&result, query)
 	return result, err
+}
+
+func (m *headersQ) Insert(hdr data.Header) (*data.Header, error) {
+	clauses := structs.Map(hdr)
+	query := m.sql.Insert(headersTableName).
+		SetMap(clauses).
+		Suffix("RETURNING *")
+
+	var result data.Header
+	err := m.db.Get(&result, query)
+	return &result, err
 }
