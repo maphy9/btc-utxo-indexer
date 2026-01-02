@@ -3,20 +3,12 @@ package electrum
 import (
 	"encoding/json"
 
-	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"github.com/maphy9/btc-utxo-indexer/internal/util"
 )
 
 type TransactionHeader struct {
 	Height int    `json:"height"`
 	TxHash string `json:"tx_hash"`
-}
-
-func (txHdr *TransactionHeader) ToData() data.Transaction {
-	return data.Transaction{
-		TxHash: txHdr.TxHash,
-		Height: txHdr.Height,
-	}
 }
 
 func (c *Client) GetTransactionHeaders(address string) ([]TransactionHeader, error) {

@@ -1,6 +1,10 @@
 package blockchain
 
-import "github.com/maphy9/btc-utxo-indexer/internal/util"
+import (
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
+	"github.com/maphy9/btc-utxo-indexer/internal/data"
+	"github.com/maphy9/btc-utxo-indexer/internal/util"
+)
 
 func (m *Manager) syncHistory(address string) error {
 	txHdrs, err := m.client.GetTransactionHeaders(address)
@@ -40,7 +44,7 @@ func (m *Manager) syncHistory(address string) error {
 		}
 
 		// TODO: Put this in a transaction
-		m.db.Transactions().Insert(txHdr.ToData())
+		m.db.Transactions().Insert(TxHdrToData(txHdr))
 
 		for _, in := range tx.Vin {
 			err = m.db.Utxos().Spend(in.TxID, in.Vout, hdr.Height)
@@ -59,7 +63,7 @@ func (m *Manager) syncHistory(address string) error {
 				continue // Address is not tracked
 			}
 
-			_, err = m.db.Utxos().Insert(out.ToData(txHdr.TxHash, hdr.Height))
+			_, err = m.db.Utxos().Insert(VoutToData(out, txHdr.TxHash, hdr.Height))
 			if err != nil {
 				return err
 			}
@@ -67,4 +71,22 @@ func (m *Manager) syncHistory(address string) error {
 	}
 
 	return nil
+}
+
+func VoutToData(vout electrum.UtxoVout, txHash string, height int) data.Utxo {
+	sats := int64(vout.Value * 100_000_000)
+	return data.Utxo{
+		Address:       vout.ScriptPubKey.Addresses[0],
+		TxHash:        txHash,
+		TxPos:         vout.N,
+		Value:         sats,
+		CreatedHeight: height,
+	}
+}
+
+func TxHdrToData(txHdr electrum.TransactionHeader) data.Transaction {
+	return data.Transaction{
+		Height: txHdr.Height,
+		TxHash: txHdr.TxHash,
+	}
 }

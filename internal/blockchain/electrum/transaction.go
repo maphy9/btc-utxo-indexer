@@ -2,8 +2,6 @@ package electrum
 
 import (
 	"encoding/json"
-
-	"github.com/maphy9/btc-utxo-indexer/internal/data"
 )
 
 type UtxoVout struct {
@@ -12,17 +10,6 @@ type UtxoVout struct {
 	ScriptPubKey struct {
 		Addresses []string `json:"addresses"`
 	} `json:"scriptPubKey"`
-}
-
-func (utxoVout *UtxoVout) ToData(txHash string, height int) data.Utxo {
-	sats := int64(utxoVout.Value * 100_000_000)
-	return data.Utxo{
-		Address:       utxoVout.ScriptPubKey.Addresses[0],
-		TxHash:        txHash,
-		TxPos:         utxoVout.N,
-		Value:         sats,
-		CreatedHeight: height,
-	}
 }
 
 type Transaction struct {
