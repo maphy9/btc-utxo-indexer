@@ -1,5 +1,7 @@
 package blockchain
 
+import "github.com/maphy9/btc-utxo-indexer/internal/util"
+
 func (m *Manager) synchronizeHistory(address string) error {
 	txHdrs, err := m.client.GetTransactionHeaders(address)
 	if err != nil {
@@ -11,7 +13,7 @@ func (m *Manager) synchronizeHistory(address string) error {
 		if err != nil {
 			return err
 		}
-		if !exists {
+		if exists {
 			continue
 		}
 
@@ -29,16 +31,19 @@ func (m *Manager) synchronizeHistory(address string) error {
 		if err != nil {
 			return err
 		}
+		if block == nil {
+			continue // Block is out of sync
+		}
 
 		if !util.VerifyMerkleProof(txMerkle.Merkle, txHdr.TxHash, txMerkle.Pos, block.Root) {
 			continue
 		}
 
 		// TODO: Put this in a transaction
-		m.db.Transactions().Insert(tx.ToData())
+		m.db.Transactions().Insert(txHdr.ToData())
 
 		for _, in := range tx.Vin {
-			err = m.db.Utxos().Spend(in.TxID, in.Vout)
+			err = m.db.Utxos().Spend(in.TxID, in.Vout, block.Height)
 			if err != nil {
 				return err
 			}
@@ -46,11 +51,15 @@ func (m *Manager) synchronizeHistory(address string) error {
 
 		for _, out := range tx.Vout {
 			address := out.ScriptPubKey.Addresses[0]
-			if !m.db.Addresses().Exists(address) {
-				continue
+			exists, err = m.db.Addresses().Exists(address)
+			if err != nil {
+				return err
+			}
+			if !exists {
+				continue // Address is not tracked
 			}
 
-			err = m.db.Utxos().Insert(out.ToData())
+			_, err = m.db.Utxos().Insert(out.ToData(txHdr.TxHash, block.Height))
 			if err != nil {
 				return err
 			}

@@ -14,7 +14,7 @@ func doubleHash(data []byte) []byte {
 func reverse(data []byte) []byte {
 	res := make([]byte, len(data))
 	for i, b := range data {
-		res[len(data) - i - 1] = b
+		res[len(data)-i-1] = b
 	}
 	return res
 }
@@ -25,7 +25,7 @@ func VerifyMerkleProof(merkle []string, txHash string, txPos int, root string) b
 	for _, hash := range merkle {
 		data, _ := hex.DecodeString(hash)
 		data = reverse(data)
-		if txPos % 2 == 0 {
+		if txPos%2 == 0 {
 			data = append(prevHash, data...)
 		} else {
 			data = append(data, prevHash...)
