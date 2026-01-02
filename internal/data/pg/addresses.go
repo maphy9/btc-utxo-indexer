@@ -17,7 +17,7 @@ const (
 func newAddressesQ(db *pgdb.DB) data.AddressesQ {
 	return &addressesQ{
 		db:  db,
-		sql: squirrel.StatementBuilder,
+		sql: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
 	}
 }
 
@@ -30,8 +30,7 @@ func (m *addressesQ) GetUserAddresses(ctx context.Context, userID int64) ([]data
 	query := m.sql.Select("a.*").
 		From(addressesTableName+" a").
 		Join(userAddressesTableName+" ua ON a.id = ua.address_id").
-		Where("ua.user_id = ?", userID).
-		PlaceholderFormat(squirrel.Dollar)
+		Where("ua.user_id = ?", userID)
 
 	var result []data.Address
 	err := m.db.SelectContext(ctx, &result, query)
@@ -43,8 +42,7 @@ func (m *addressesQ) GetUserAddress(ctx context.Context, userID int64, address s
 		From(addressesTableName+" a").
 		Join(userAddressesTableName+" ua ON a.id = ua.address_id").
 		Where("user_id = ?", userID).
-		Where("a.address = ?", address).
-		PlaceholderFormat(squirrel.Dollar)
+		Where("a.address = ?", address)
 
 	var result data.UserAddress
 	err := m.db.GetContext(ctx, &result, query)
@@ -106,4 +104,14 @@ func (m *addressesQ) UpdateStatus(address, status string) (string, error) {
 		return err
 	})
 	return oldStatus, err
+}
+
+func (m *addressesQ) Exists(address string) (bool, error) {
+	query := m.sql.Select("COUNT(*)").
+		From(addressesTableName).
+		Where("address = ?")
+
+	var result int
+	err := m.db.Get(&result, query)
+	return result > 0, err
 }

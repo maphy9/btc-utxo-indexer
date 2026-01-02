@@ -11,6 +11,7 @@ type AddressesQ interface {
 	InsertAddress(ctx context.Context, address string) (*Address, error)
 	InsertUserAddress(ctx context.Context, userAddress UserAddress) (*UserAddress, error)
 	UpdateStatus(address, status string) (string, error)
+	Exists(address string) (bool, error)
 }
 
 type Address struct {

@@ -1,9 +1,8 @@
 package pg
 
 import (
-	"context"
-
 	"github.com/Masterminds/squirrel"
+	"github.com/fatih/structs"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"gitlab.com/distributed_lab/kit/pgdb"
 )
@@ -15,7 +14,7 @@ const (
 func newTransactionsQ(db *pgdb.DB) data.TransactionsQ {
 	return &transactionsQ{
 		db:  db,
-		sql: squirrel.StatementBuilder,
+		sql: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
 	}
 }
 
@@ -24,32 +23,23 @@ type transactionsQ struct {
 	sql squirrel.StatementBuilderType
 }
 
-func (m *transactionsQ) GetByAddress(ctx context.Context, address string) ([]data.Transaction, error) {
-	query := m.sql.Select("t.*").
-		Distinct().
-		From(transactionsTableName+" t").
-		Join(utxosTableName+" u ON t.tx_hash = u.tx_hash").
-		Where("u.address = ?", address).
-		PlaceholderFormat(squirrel.Dollar)
+func (m *transactionsQ) Exists(txHash string) (bool, error) {
+	query := m.sql.Select("COUNT(*)").
+		From(transactionsTableName).
+		Where("tx_hash = ?", txHash)
 
-	var result []data.Transaction
-	err := m.db.SelectContext(ctx, &result, query)
-	return result, err
+	var result int
+	err := m.db.Get(&result, query)
+	return result > 0, err
 }
 
-func (m *transactionsQ) InsertMany(ctx context.Context, transactions []data.Transaction) ([]data.Transaction, error) {
-	if len(transactions) == 0 {
-		return nil, nil
-	}
-
+func (m *transactionsQ) Insert(tx data.Transaction) (*data.Transaction, error) {
+	clauses := structs.Map(tx)
 	query := m.sql.Insert(transactionsTableName).
-		Columns("tx_hash", "height")
-	for _, transation := range transactions {
-		query = query.Values(transation.TxHash, transation.Height)
-	}
-	query = query.Suffix("ON CONFLICT (tx_hash) DO NOTHING RETURNING *")
+		SetMap(clauses).
+		Suffix("RETURNING *")
 
-	var result []data.Transaction
-	err := m.db.SelectContext(ctx, &result, query)
-	return result, err
+	var result data.Transaction
+	err := m.db.Get(&result, query)
+	return &result, err
 }

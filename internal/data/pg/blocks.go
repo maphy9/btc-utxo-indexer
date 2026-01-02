@@ -1,8 +1,6 @@
 package pg
 
 import (
-	"context"
-
 	"github.com/Masterminds/squirrel"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"gitlab.com/distributed_lab/kit/pgdb"
@@ -15,7 +13,7 @@ const (
 func newBlocksQ(db *pgdb.DB) data.BlocksQ {
 	return &blocksQ{
 		db:  db,
-		sql: squirrel.StatementBuilder,
+		sql: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
 	}
 }
 
@@ -24,19 +22,12 @@ type blocksQ struct {
 	sql squirrel.StatementBuilderType
 }
 
-func (m *blocksQ) InsertMany(ctx context.Context, blocks []data.Block) ([]data.Block, error) {
-	if len(blocks) == 0 {
-		return nil, nil
-	}
+func (m *blocksQ) GetByHeight(height int) (*data.Block, error) {
+	query := m.sql.Select("*").
+		From(blocksTableName).
+		Where("height = ?", height)
 
-	query := m.sql.Insert(blocksTableName).
-		Columns("height", "hash", "parent_hash", "timestamp")
-	for _, block := range blocks {
-		query = query.Values(block.Height, block.Hash, block.ParentHash, block.Timestamp)
-	}
-	query = query.Suffix("ON CONFLICT DO NOTHING RETURNING *")
-
-	var result []data.Block
-	err := m.db.SelectContext(ctx, &result, query)
-	return result, err
+	var result data.Block
+	err := m.db.Get(&result, query)
+	return &result, err
 }

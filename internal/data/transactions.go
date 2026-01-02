@@ -1,11 +1,8 @@
 package data
 
-import "context"
-
 type TransactionsQ interface {
-	GetByAddress(ctx context.Context, address string) ([]Transaction, error)
-
-	InsertMany(ctx context.Context, transactions []Transaction) ([]Transaction, error)
+	Exists(txHash string) (bool, error)
+	Insert(tx Transaction) (*Transaction, error)
 }
 
 type Transaction struct {

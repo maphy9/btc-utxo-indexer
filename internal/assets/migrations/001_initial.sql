@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS blocks (
   height integer PRIMARY KEY,
   hash text UNIQUE NOT NULL,
   parent_hash text NOT NULL,
-  timestamp timestamptz NOT NULL 
+  root text NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS transactions (
@@ -39,11 +39,14 @@ CREATE TABLE IF NOT EXISTS utxos
 (
   address text REFERENCES addresses (address) ON DELETE CASCADE NOT NULL,
   tx_hash text REFERENCES transactions (tx_hash) ON DELETE CASCADE NOT NULL,
-  height integer REFERENCES blocks (height) ON DELETE CASCADE NOT NULL,
   tx_pos integer NOT NULL,
   value bigint NOT NULL,
-  UNIQUE (tx_hash, tx_pos)
+  created_height integer REFERENCES blocks (height) ON DELETE CASCADE NOT NULL,
+  spent_height integer REFERENCES blocks (height) ON DELETE SET NULL,
+  PRIMARY KEY (tx_hash, tx_pos)
 );
+
+CREATE INDEX idx_utxos_address ON utxos (address);
 
 -- +migrate Down
 DROP TABLE IF EXISTS utxos CASCADE;

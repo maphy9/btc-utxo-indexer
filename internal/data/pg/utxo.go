@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/fatih/structs"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"gitlab.com/distributed_lab/kit/pgdb"
 )
@@ -13,7 +14,7 @@ const utxosTableName = "utxos"
 func newUtxosQ(db *pgdb.DB) data.UtxosQ {
 	return &utxosQ{
 		db:  db,
-		sql: squirrel.StatementBuilder,
+		sql: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
 	}
 }
 
@@ -25,36 +26,28 @@ type utxosQ struct {
 func (m *utxosQ) GetByAddress(ctx context.Context, address string) ([]data.Utxo, error) {
 	query := m.sql.Select("*").
 		From(utxosTableName).
-		Where("address = ?", address).
-		PlaceholderFormat(squirrel.Dollar)
+		Where("address = ?", address)
 
 	var result []data.Utxo
 	err := m.db.SelectContext(ctx, &result, query)
 	return result, err
 }
 
-func (m *utxosQ) InsertMany(ctx context.Context, utxos []data.Utxo) ([]data.Utxo, error) {
-	// TODO: Handle insertion of > 65535 / 6 ≈ 10,922 rows
-	if len(utxos) == 0 {
-		return nil, nil
-	}
+func (m *utxosQ) Spend(txHash string, txPos int, spentHeight int) error {
+	query := m.sql.Update(utxosTableName).
+		Set("spent_height", spentHeight).
+		Where(squirrel.Eq{"tx_hash": txHash, "tx_pos": txPos})
 
+	return m.db.Exec(query)
+}
+
+func (m *utxosQ) Insert(utxo data.Utxo) (*data.Utxo, error) {
+	clauses := structs.Map(utxo)
 	query := m.sql.Insert(utxosTableName).
-		Columns("address", "tx_hash", "tx_pos", "value", "height")
+		SetMap(clauses).
+		Suffix("RETURNING *")
 
-	for _, utxo := range utxos {
-		query = query.Values(
-			utxo.Address,
-			utxo.TxHash,
-			utxo.TxPos,
-			utxo.Value,
-			utxo.Height,
-		)
-	}
-
-	query = query.Suffix("ON CONFLICT (tx_hash, tx_pos) DO NOTHING RETURNING *")
-
-	var result []data.Utxo
-	err := m.db.SelectContext(ctx, &result, query)
-	return result, err
+	var result data.Utxo
+	err := m.db.Get(&result, query)
+	return &result, err
 }
