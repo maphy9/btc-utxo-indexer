@@ -37,6 +37,8 @@ func (m *Manager) SyncHeaders() error {
 				return err
 			}
 		}
+
+		log.Printf("Synchronized %d headers", height+len(hdrs))
 	}
 
 	return nil

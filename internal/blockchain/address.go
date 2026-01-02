@@ -2,7 +2,18 @@ package blockchain
 
 import "log"
 
-func (m *Manager) subscribeSavedAddresses() error {
+func (m *Manager) SubscribeAddress(address string) error {
+	notifyChan, err := m.client.SubscribeAddress(address)
+	if err != nil {
+		log.Printf("Failed to subscribe to an address: %v", err)
+		return err
+	}
+
+	go m.watchAddress(address, notifyChan)
+	return nil
+}
+
+func (m *Manager) SubscribeSavedAddresses() error {
 	addresses, err := m.db.Addresses().GetAllAddresses()
 	if err != nil {
 		return err
@@ -16,17 +27,6 @@ func (m *Manager) subscribeSavedAddresses() error {
 	return nil
 }
 
-func (m *Manager) SubscribeAddress(address string) error {
-	notifyChan, err := m.client.SubscribeAddress(address)
-	if err != nil {
-		log.Printf("Failed to subscribe to an address: %v", err)
-		return err
-	}
-
-	go m.watchAddress(address, notifyChan)
-	return nil
-}
-
 func (m *Manager) watchAddress(address string, notifyChan <-chan string) {
 	for status := range notifyChan {
 		oldStatus, err := m.db.Addresses().UpdateStatus(address, status)
@@ -37,6 +37,6 @@ func (m *Manager) watchAddress(address string, notifyChan <-chan string) {
 		if oldStatus == status {
 			continue
 		}
-		m.synchronizeHistory(address)
+		m.syncHistory(address)
 	}
 }

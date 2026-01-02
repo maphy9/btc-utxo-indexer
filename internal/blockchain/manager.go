@@ -16,10 +16,6 @@ func NewManager(nodeAddr string, db data.MasterQ) (*Manager, error) {
 		db:     db,
 	}
 
-	if err := m.subscribeSavedAddresses(); err != nil {
-		return nil, err
-	}
-
 	return m, nil
 }
 

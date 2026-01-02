@@ -39,6 +39,11 @@ func newService(cfg config.Config) (*service, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = manager.SubscribeSavedAddresses()
+	if err != nil {
+		return nil, err
+	}
+
 	return &service{
 		log:           cfg.Log(),
 		copus:         cfg.Copus(),

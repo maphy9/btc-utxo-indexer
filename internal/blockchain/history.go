@@ -2,7 +2,7 @@ package blockchain
 
 import "github.com/maphy9/btc-utxo-indexer/internal/util"
 
-func (m *Manager) synchronizeHistory(address string) error {
+func (m *Manager) syncHistory(address string) error {
 	txHdrs, err := m.client.GetTransactionHeaders(address)
 	if err != nil {
 		return err

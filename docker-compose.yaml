@@ -29,6 +29,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+  sync:
+    build: .
+    container_name: sync
+    command: ["sync", "headers"]
+    volumes:
+      - ./config.local.yaml:/app/config/config.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
   svc:
     build: .
     container_name: svc
@@ -38,7 +49,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      migration:
+      sync:
         condition: service_completed_successfully
     develop:
       watch:
