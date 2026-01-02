@@ -2,8 +2,10 @@ package data
 
 type HeadersQ interface {
 	GetByHeight(height int) (*Header, error)
-	GetMaxHeight() (int, error)
-	InsertBatch(hdrs []Header) error
+	GetTipHeader() (*Header, error)
+	InsertBatch(hdrs []*Header) error
+	Insert(hdr *Header) (*Header, error)
+	DeleteByHeight(height int) error
 }
 
 type Header struct {

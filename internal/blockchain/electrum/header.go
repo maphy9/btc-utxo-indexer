@@ -76,3 +76,19 @@ func (c *Client) GetHeaders(height, count int) ([]Header, error) {
 	}
 	return hdrs, nil
 }
+
+func (c *Client) GetHeader(height int) (*Header, error) {
+	rawHdrRes, err := c.request("blockchain.block.header", []any{height})
+	if err != nil {
+		return nil, err
+	}
+	var hdrHex string
+	err = json.Unmarshal(rawHdrRes, &hdrHex)
+	if err != nil {
+		return nil, err
+	}
+	return &Header{
+		Hex: hdrHex,
+		Height: height,
+	}, nil
+}

@@ -6,10 +6,10 @@ import (
 
 func VerifyMerkleProof(merkle []string, txHash string, txPos int, root string) bool {
 	prevHash, _ := hex.DecodeString(txHash)
-	prevHash = reverse(prevHash)
+	prevHash = Reverse(prevHash)
 	for _, hash := range merkle {
 		data, _ := hex.DecodeString(hash)
-		data = reverse(data)
+		data = Reverse(data)
 		if txPos%2 == 0 {
 			data = append(prevHash, data...)
 		} else {
@@ -18,6 +18,6 @@ func VerifyMerkleProof(merkle []string, txHash string, txPos int, root string) b
 		txPos /= 2
 		prevHash = doubleHash(data)
 	}
-	myRoot := hex.EncodeToString(reverse(prevHash))
+	myRoot := hex.EncodeToString(Reverse(prevHash))
 	return root == myRoot
 }
