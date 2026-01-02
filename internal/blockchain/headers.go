@@ -45,4 +45,6 @@ func (m *Manager) ListenHeaders() error {
 		// Handle reorg
 		log.Printf("New header found: %v", hdr)
 	}
+
+	return nil
 }

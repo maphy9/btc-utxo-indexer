@@ -34,3 +34,18 @@ func (c *Client) headerNotification(res response) {
 	default:
 	}
 }
+
+func (c *Client) GetTipHeader() (*Header, error) {
+	rawHdr, err := c.request("blockchain.headers.subscribe", []any{})
+	if err != nil {
+		return nil, err
+	}
+
+	var hdr Header
+	err = json.Unmarshal(rawHdr, &hdr)
+	if err != nil {
+		return nil, err
+	}
+	
+	return &hdr, nil
+}
