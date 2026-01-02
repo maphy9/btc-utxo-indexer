@@ -27,3 +27,7 @@ type Manager struct {
 	client *electrum.Client
 	db     data.MasterQ
 }
+
+func (m *Manager) Close() error {
+	return m.client.Close()
+}

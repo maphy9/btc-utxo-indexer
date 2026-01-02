@@ -43,7 +43,7 @@ func (c *Client) listen() {
 		line, err := reader.ReadBytes('\n')
 		if err != nil {
 			log.Printf("Connection closed: %v", err)
-			return
+			break
 		}
 
 		var res response
@@ -68,4 +68,22 @@ func (c *Client) listen() {
 		}
 		c.mu.Unlock()
 	}
+
+	close(c.hdrsSub)
+	c.mu.Lock()
+	for _, resChan := range c.responses {
+		close(resChan)
+	}
+	for _, addrChan := range c.addrSubs {
+		close(addrChan)
+	}
+	c.mu.Unlock()
+}
+
+func (c *Client) Close() error {
+	err := c.conn.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }

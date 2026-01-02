@@ -36,7 +36,10 @@ func (c *Client) request(method string, params []any) (json.RawMessage, error) {
 	}
 
 	select {
-	case res := <-resChan:
+	case res, ok := <-resChan:
+		if !ok {
+			return nil, errors.New("connection closed")
+		}
 		if res.Error != nil {
 			return nil, errors.New(res.Error.Message)
 		}
