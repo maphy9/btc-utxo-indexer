@@ -2,14 +2,9 @@ package data
 
 type MasterQ interface {
 	Users() UsersQ
-
 	Addresses() AddressesQ
-
 	Utxos() UtxosQ
-
 	Transactions() TransactionsQ
-
-	Blocks() BlocksQ
-
+	Headers() HeadersQ
 	Transaction(fn func(db MasterQ) error) error
 }

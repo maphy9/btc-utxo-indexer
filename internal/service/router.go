@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/go-chi/chi"
-	"github.com/maphy9/btc-utxo-indexer/internal/data/pg"
 	"github.com/maphy9/btc-utxo-indexer/internal/service/handlers"
 	"github.com/maphy9/btc-utxo-indexer/internal/service/helpers"
 	"github.com/maphy9/btc-utxo-indexer/internal/service/middleware"
@@ -18,7 +17,7 @@ func (s *service) router() chi.Router {
 		ape.CtxMiddleware(
 			helpers.CtxLog(s.log),
 			helpers.CtxServiceConfig(s.serviceConfig),
-			helpers.CtxDB(pg.NewMasterQ(s.db)),
+			helpers.CtxDB(s.db),
 			helpers.CtxManager(s.manager),
 		),
 	)

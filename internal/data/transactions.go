@@ -1,14 +1,11 @@
 package data
 
-import "context"
-
 type TransactionsQ interface {
-	GetByAddress(ctx context.Context, address string) ([]Transaction, error)
-
-	InsertMany(ctx context.Context, transactions []Transaction) ([]Transaction, error)
+	Exists(txHash string) (bool, error)
+	Insert(tx Transaction) (*Transaction, error)
 }
 
 type Transaction struct {
-	TxID        string `db:"txid" structs:"txid" json:"txid"`
-	BlockHeight int    `db:"block_height" structs:"block_height" json:"block_height"`
+	TxHash string `db:"tx_hash" structs:"tx_hash" json:"tx_hash"`
+	Height int    `db:"height" structs:"height" json:"height"`
 }

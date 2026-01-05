@@ -17,7 +17,7 @@ const (
 func newAddressesQ(db *pgdb.DB) data.AddressesQ {
 	return &addressesQ{
 		db:  db,
-		sql: squirrel.StatementBuilder,
+		sql: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
 	}
 }
 
@@ -30,8 +30,7 @@ func (m *addressesQ) GetUserAddresses(ctx context.Context, userID int64) ([]data
 	query := m.sql.Select("a.*").
 		From(addressesTableName+" a").
 		Join(userAddressesTableName+" ua ON a.id = ua.address_id").
-		Where("ua.user_id = ?", userID).
-		PlaceholderFormat(squirrel.Dollar)
+		Where("ua.user_id = ?", userID)
 
 	var result []data.Address
 	err := m.db.SelectContext(ctx, &result, query)
@@ -43,12 +42,20 @@ func (m *addressesQ) GetUserAddress(ctx context.Context, userID int64, address s
 		From(addressesTableName+" a").
 		Join(userAddressesTableName+" ua ON a.id = ua.address_id").
 		Where("user_id = ?", userID).
-		Where("a.address = ?", address).
-		PlaceholderFormat(squirrel.Dollar)
+		Where("a.address = ?", address)
 
 	var result data.UserAddress
 	err := m.db.GetContext(ctx, &result, query)
 	return &result, err
+}
+
+func (m *addressesQ) GetAllAddresses() ([]string, error) {
+	query := m.sql.Select("address").
+		From(addressesTableName)
+
+	var result []string
+	err := m.db.Select(&result, query)
+	return result, err
 }
 
 func (m *addressesQ) InsertAddress(ctx context.Context, address string) (*data.Address, error) {
@@ -66,6 +73,15 @@ func (m *addressesQ) InsertAddress(ctx context.Context, address string) (*data.A
 	return &result, err
 }
 
+func (m *addressesQ) GetStatus(address string) (string, error) {
+	query := m.sql.Select("status").
+		From(addressesTableName).
+		Where("address = ?", address)
+	var status string
+	err := m.db.Get(&status, query)
+	return status, err
+}
+
 func (m *addressesQ) InsertUserAddress(ctx context.Context, userAddress data.UserAddress) (*data.UserAddress, error) {
 	clauses := structs.Map(userAddress)
 	query := m.sql.Insert(userAddressesTableName).
@@ -75,4 +91,21 @@ func (m *addressesQ) InsertUserAddress(ctx context.Context, userAddress data.Use
 	var result data.UserAddress
 	err := m.db.GetContext(ctx, &result, query)
 	return &result, err
+}
+
+func (m *addressesQ) UpdateStatus(address, status string) error {
+	query := m.sql.Update(addressesTableName).
+		Set("status", status).
+		Where("address = ?", address)
+	return m.db.Exec(query)
+}
+
+func (m *addressesQ) Exists(address string) (bool, error) {
+	query := m.sql.Select("COUNT(*)").
+		From(addressesTableName).
+		Where("address = ?", address)
+
+	var result int
+	err := m.db.Get(&result, query)
+	return result > 0, err
 }
