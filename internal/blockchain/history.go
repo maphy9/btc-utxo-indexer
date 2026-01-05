@@ -48,7 +48,10 @@ func (m *Manager) syncHistory(address string) error {
 		}
 
 		err = m.db.Transaction(func(q data.MasterQ) error {
-			q.Transactions().Insert(TxHdrToData(txHdr))
+			_, err = q.Transactions().Insert(TxHdrToData(txHdr))
+			if err != nil {
+				return err
+			}
 
 			for _, in := range tx.Vin {
 				err = q.Utxos().Spend(in.TxID, in.Vout, tx.TxID)

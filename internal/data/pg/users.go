@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/fatih/structs"
@@ -40,6 +41,9 @@ func (m *usersQ) GetByUsername(ctx context.Context, username string) (*data.User
 
 	var result data.User
 	err := m.db.GetContext(ctx, &result, query)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	return &result, err
 }
 

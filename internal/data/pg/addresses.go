@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/fatih/structs"
@@ -46,6 +47,9 @@ func (m *addressesQ) GetUserAddress(ctx context.Context, userID int64, address s
 
 	var result data.UserAddress
 	err := m.db.GetContext(ctx, &result, query)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	return &result, err
 }
 
@@ -56,21 +60,6 @@ func (m *addressesQ) GetAllAddresses() ([]string, error) {
 	var result []string
 	err := m.db.Select(&result, query)
 	return result, err
-}
-
-func (m *addressesQ) InsertAddress(ctx context.Context, address string) (*data.Address, error) {
-	query := m.sql.Insert(addressesTableName).
-		Columns("address").
-		Values(address).
-		Suffix(`
-			ON CONFLICT (address) DO
-			UPDATE SET address = EXCLUDED.address
-			RETURNING *
-		`)
-
-	var result data.Address
-	err := m.db.GetContext(ctx, &result, query)
-	return &result, err
 }
 
 func (m *addressesQ) GetStatus(address string) (string, error) {
@@ -95,29 +84,44 @@ func (m *addressesQ) GetBalance(ctx context.Context, address string) (int64, err
 
 func (m *addressesQ) GetTransactions(ctx context.Context, address string) ([]data.AddressTransaction, error) {
 	query := squirrel.Expr(`
-			SELECT 
-					t.tx_hash,
-					SUM(sub.received) as received_value,
-					SUM(sub.spent) as spent_value
-			FROM (
-					SELECT tx_hash, value as received, 0 as spent
-					FROM utxos 
-					WHERE address = $1
-					
-					UNION ALL
-					
-					SELECT spent_tx_hash as tx_hash, 0 as received, value as spent
-					FROM utxos 
-					WHERE address = $1 AND spent_tx_hash IS NOT NULL
-			) sub
-			JOIN transactions t ON t.tx_hash = sub.tx_hash
-			GROUP BY t.tx_hash, t.height
-			ORDER BY t.height DESC;
+	SELECT 
+	t.tx_hash,
+	SUM(sub.received) as received_value,
+	SUM(sub.spent) as spent_value
+	FROM (
+		SELECT tx_hash, value as received, 0 as spent
+		FROM utxos 
+		WHERE address = $1
+		
+		UNION ALL
+		
+		SELECT spent_tx_hash as tx_hash, 0 as received, value as spent
+		FROM utxos 
+		WHERE address = $1 AND spent_tx_hash IS NOT NULL
+		) sub
+		JOIN transactions t ON t.tx_hash = sub.tx_hash
+		GROUP BY t.tx_hash, t.height
+		ORDER BY t.height DESC;
 	`, address)
 
 	var result []data.AddressTransaction
 	err := m.db.SelectContext(ctx, &result, query)
 	return result, err
+}
+
+func (m *addressesQ) InsertAddress(ctx context.Context, address string) (*data.Address, error) {
+	query := m.sql.Insert(addressesTableName).
+		Columns("address").
+		Values(address).
+		Suffix(`
+			ON CONFLICT (address) DO
+			UPDATE SET address = EXCLUDED.address
+			RETURNING *
+		`)
+
+	var result data.Address
+	err := m.db.GetContext(ctx, &result, query)
+	return &result, err
 }
 
 func (m *addressesQ) InsertUserAddress(ctx context.Context, userAddress data.UserAddress) (*data.UserAddress, error) {

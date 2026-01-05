@@ -9,7 +9,7 @@ import (
 
 func ParseHeaderHex(hexStr string, height int) (*data.Header, error) {
 	if len(hexStr) != 160 {
-		return nil, errors.New("Bad header hex")
+		return nil, errors.New("bad header hex")
 	}
 	bytes, err := hex.DecodeString(hexStr)
 	if err != nil {
