@@ -35,6 +35,7 @@ func (s *service) router() chi.Router {
 			r.Post("/", handlers.AddAddress)
 			r.Get("/", handlers.GetAddresses)
 			r.Get("/{address}/utxos", handlers.GetUtxos)
+			r.Get("/{address}/balance", handlers.GetBalance)
 		})
 	})
 

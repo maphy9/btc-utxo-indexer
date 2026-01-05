@@ -15,3 +15,23 @@ func NewGetAddressesResponse(addresses []data.Address) GetAddressesResponse {
 		Addresses: response,
 	}
 }
+
+type GetUtxosResponse struct {
+	Utxos []data.Utxo `json:"utxos"`
+}
+
+func NewGetUtxosResponse(utxos []data.Utxo) GetUtxosResponse {
+	return GetUtxosResponse{utxos}
+}
+
+type GetBalanceResponse struct {
+	BalanceSat int64 `json:"balance_sat"`
+	BalanceBtc float64 `json:"balance_btc"`
+}
+
+func NewGetBalanceResponse(balance int64) GetBalanceResponse {
+	return GetBalanceResponse{
+		BalanceSat: balance,
+		BalanceBtc: float64(balance) / float64(100_000_000),
+	}
+}

@@ -9,6 +9,7 @@ type AddressesQ interface {
 	GetUserAddress(ctx context.Context, userID int64, address string) (*UserAddress, error)
 	GetAllAddresses() ([]string, error)
 	GetStatus(address string) (string, error)
+	GetBalance(ctx context.Context, address string) (int64, error)
 	InsertAddress(ctx context.Context, address string) (*Address, error)
 	InsertUserAddress(ctx context.Context, userAddress UserAddress) (*UserAddress, error)
 	UpdateStatus(address, status string) error

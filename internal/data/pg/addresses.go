@@ -82,6 +82,17 @@ func (m *addressesQ) GetStatus(address string) (string, error) {
 	return status, err
 }
 
+func (m *addressesQ) GetBalance(ctx context.Context, address string) (int64, error) {
+	query := m.sql.Select("SUM(value)").
+		From(utxosTableName).
+		Where("address = ?", address).
+		Where("spent_height IS NULL")
+
+	var result int64
+	err := m.db.GetContext(ctx, &result, query)
+	return result, err
+}
+
 func (m *addressesQ) InsertUserAddress(ctx context.Context, userAddress data.UserAddress) (*data.UserAddress, error) {
 	clauses := structs.Map(userAddress)
 	query := m.sql.Insert(userAddressesTableName).
