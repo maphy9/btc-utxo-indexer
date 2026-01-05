@@ -1,56 +1,29 @@
 package blockchain
 
 import (
-	"fmt"
-	"sync"
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
+	"github.com/maphy9/btc-utxo-indexer/internal/data"
 )
 
-func NewManager(primaryNode Node) *Manager {
-	return &Manager{
-		watchers:    make([]watcherEntry, 0, 5),
-		PrimaryNode: primaryNode,
+func NewManager(nodeAddr string, db data.MasterQ) (*Manager, error) {
+	client, err := electrum.NewClient(nodeAddr)
+	if err != nil {
+		return nil, err
 	}
-}
 
-type watcherEntry struct {
-	tag       string
-	watcher   Watcher
-	blockChan <-chan *Block
+	m := &Manager{
+		client: client,
+		db:     db,
+	}
+
+	return m, nil
 }
 
 type Manager struct {
-	sync.RWMutex
-	watchers    []watcherEntry
-	PrimaryNode Node
+	client *electrum.Client
+	db     data.MasterQ
 }
 
-func (m *Manager) AddWatcher(tag string, node Node) {
-	m.Lock()
-	defer m.Unlock()
-	blockChan := make(chan *Block, 64)
-	watcher := Watcher{
-		node:      node,
-		blockChan: blockChan,
-	}
-	entry := watcherEntry{
-		tag:       tag,
-		watcher:   watcher,
-		blockChan: blockChan,
-	}
-	m.watchers = append(m.watchers, entry)
-	go entry.watcher.Watch()
-}
-
-func (m *Manager) Listen() {
-	for {
-		m.RLock()
-		watchers := make([]watcherEntry, 0, len(m.watchers))
-		watchers = append(watchers, m.watchers...)
-		m.RUnlock()
-
-		for _, watcher := range watchers {
-			newBlock := <-watcher.blockChan
-			fmt.Printf("Latest block (%s): %v\n", watcher.tag, newBlock)
-		}
-	}
+func (m *Manager) Close() error {
+	return m.client.Close()
 }

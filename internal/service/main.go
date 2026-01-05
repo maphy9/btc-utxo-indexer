@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/maphy9/btc-utxo-indexer/internal/blockchain"
-	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/mempool"
 	"github.com/maphy9/btc-utxo-indexer/internal/config"
+	"github.com/maphy9/btc-utxo-indexer/internal/data"
+	"github.com/maphy9/btc-utxo-indexer/internal/data/pg"
 	"gitlab.com/distributed_lab/kit/copus/types"
-	"gitlab.com/distributed_lab/kit/pgdb"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 )
@@ -18,7 +18,7 @@ type service struct {
 	copus         types.Copus
 	listener      net.Listener
 	serviceConfig *config.ServiceConfig
-	db            *pgdb.DB
+	db            data.MasterQ
 	manager       *blockchain.Manager
 }
 
@@ -30,25 +30,37 @@ func (s *service) run() error {
 		return errors.Wrap(err, "cop failed")
 	}
 
-	s.manager.AddWatcher("mempool watcher", mempool.NewNode())
-	go s.manager.Listen()
-
 	return http.Serve(s.listener, r)
 }
 
-func newService(cfg config.Config) *service {
+func newService(cfg config.Config) (*service, error) {
+	db := pg.NewMasterQ(cfg.DB())
+	manager, err := blockchain.NewManager("electrum.blockstream.info:50002", db)
+	if err != nil {
+		return nil, err
+	}
+	go manager.ListenHeaders()
+	err = manager.SubscribeSavedAddresses()
+	if err != nil {
+		return nil, err
+	}
+
 	return &service{
 		log:           cfg.Log(),
 		copus:         cfg.Copus(),
 		listener:      cfg.Listener(),
 		serviceConfig: cfg.ServiceConfig(),
-		db:            cfg.DB(),
-		manager:       blockchain.NewManager(mempool.NewNode()),
-	}
+		db:            db,
+		manager:       manager,
+	}, nil
 }
 
 func Run(cfg config.Config) {
-	if err := newService(cfg).run(); err != nil {
+	service, err := newService(cfg)
+	if err != nil {
+		panic(err)
+	}
+	if err := service.run(); err != nil {
 		panic(err)
 	}
 }

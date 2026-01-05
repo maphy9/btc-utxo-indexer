@@ -29,6 +29,9 @@ func Run(args []string) bool {
 	migrateUpCmd := migrateCmd.Command("up", "migrate db up")
 	migrateDownCmd := migrateCmd.Command("down", "migrate db down")
 
+	syncCmd := app.Command("sync", "synchronize with node")
+	headersCmd := syncCmd.Command("headers", "synchronize headers")
+
 	// custom commands go here...
 
 	cmd, err := app.Parse(args[1:])
@@ -44,7 +47,8 @@ func Run(args []string) bool {
 		err = MigrateUp(cfg)
 	case migrateDownCmd.FullCommand():
 		err = MigrateDown(cfg)
-	// handle any custom commands here in the same way
+	case headersCmd.FullCommand():
+		err = SyncHeaders(cfg)
 	default:
 		log.Errorf("unknown command %s", cmd)
 		return false
