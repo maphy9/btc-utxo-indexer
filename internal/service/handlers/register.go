@@ -31,5 +31,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 				http.StatusInternalServerError, "Failed to register the user",
 			))
 		}
+		return
 	}
+
+	w.WriteHeader(http.StatusCreated)
 }
