@@ -8,7 +8,9 @@ import (
 
 func SyncHeaders(cfg config.Config) error {
 	db := pg.NewMasterQ(cfg.DB())
-	manager, err := blockchain.NewManager("electrum.blockstream.info:50002", db)
+	log := cfg.Log()
+
+	manager, err := blockchain.NewManager("electrum.blockstream.info:50002", db, log)
 	if err != nil {
 		return err
 	}

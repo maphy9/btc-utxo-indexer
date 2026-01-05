@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"crypto/tls"
 	"encoding/json"
-	"log"
 	"net"
 	"sync"
 )
@@ -42,7 +41,6 @@ func (c *Client) listen() {
 	for {
 		line, err := reader.ReadBytes('\n')
 		if err != nil {
-			log.Printf("Connection closed: %v", err)
 			break
 		}
 
@@ -72,7 +70,6 @@ func (c *Client) listen() {
 			select {
 			case ch <- res:
 			default:
-				log.Printf("Warning: Response channel full/abandoned for ID %d", res.ID)
 			}
 		}
 	}

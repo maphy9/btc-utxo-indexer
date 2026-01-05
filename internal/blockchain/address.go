@@ -1,11 +1,9 @@
 package blockchain
 
-import "log"
-
 func (m *Manager) SubscribeAddress(address string) error {
 	notifyChan, err := m.client.SubscribeAddress(address)
 	if err != nil {
-		log.Printf("Failed to subscribe to an address: %v", err)
+		m.log.WithError(err).Errorf("failed to subscribe to address (%s)", address)
 		return err
 	}
 
@@ -31,7 +29,7 @@ func (m *Manager) watchAddress(address string, notifyChan <-chan string) {
 	for status := range notifyChan {
 		oldStatus, err := m.db.Addresses().GetStatus(address)
 		if err != nil {
-			log.Printf("Failed to get address status: %v", err)
+			m.log.WithError(err).Errorf("failed to get address status (%s)", address)
 			continue
 		}
 		if oldStatus == status {
@@ -39,13 +37,13 @@ func (m *Manager) watchAddress(address string, notifyChan <-chan string) {
 		}
 		err = m.syncHistory(address)
 		if err != nil {
-			log.Printf("Failed to sync address: %v", err)
+			m.log.WithError(err).Errorf("failed to sync address (%s)", address)
 			continue
 		}
-		log.Printf("Finished sync for address %s", address)
+		m.log.Infof("finished sync for address (%s)", address)
 		err = m.db.Addresses().UpdateStatus(address, status)
 		if err != nil {
-			log.Printf("Failed to update address status: %v", err)
+			m.log.WithError(err).Errorf("failed to update address status (%s)", address)
 			continue
 		}
 	}

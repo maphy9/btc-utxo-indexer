@@ -1,11 +1,8 @@
 package blockchain
 
 import (
-	"log"
-
 	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
-	"github.com/maphy9/btc-utxo-indexer/internal/util"
 )
 
 func (m *Manager) syncHistory(address string) error {
@@ -15,7 +12,7 @@ func (m *Manager) syncHistory(address string) error {
 	}
 
 	for _, txHdr := range txHdrs {
-		log.Printf("Received new transaction for address %s: %s", address, txHdr.TxHash)
+		m.log.Infof("Received new transaction for address %s: %s", address, txHdr.TxHash)
 
 		exists, err := m.db.Transactions().Exists(txHdr.TxHash)
 		if err != nil {
@@ -43,7 +40,7 @@ func (m *Manager) syncHistory(address string) error {
 			continue
 		}
 
-		if !util.VerifyMerkleProof(txMerkle.Merkle, txHdr.TxHash, txMerkle.Pos, hdr.Root) {
+		if !verifyMerkleProof(txMerkle.Merkle, txHdr.TxHash, txMerkle.Pos, hdr.Root) {
 			continue
 		}
 

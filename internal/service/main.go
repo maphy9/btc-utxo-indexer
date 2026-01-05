@@ -35,7 +35,9 @@ func (s *service) run() error {
 
 func newService(cfg config.Config) (*service, error) {
 	db := pg.NewMasterQ(cfg.DB())
-	manager, err := blockchain.NewManager("electrum.blockstream.info:50002", db)
+	log := cfg.Log()
+
+	manager, err := blockchain.NewManager("electrum.blockstream.info:50002", db, log)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +48,7 @@ func newService(cfg config.Config) (*service, error) {
 	}
 
 	return &service{
-		log:           cfg.Log(),
+		log:           log,
 		copus:         cfg.Copus(),
 		listener:      cfg.Listener(),
 		serviceConfig: cfg.ServiceConfig(),

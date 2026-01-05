@@ -3,9 +3,10 @@ package blockchain
 import (
 	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
+	"gitlab.com/distributed_lab/logan/v3"
 )
 
-func NewManager(nodeAddr string, db data.MasterQ) (*Manager, error) {
+func NewManager(nodeAddr string, db data.MasterQ, log *logan.Entry) (*Manager, error) {
 	client, err := electrum.NewClient(nodeAddr)
 	if err != nil {
 		return nil, err
@@ -14,6 +15,7 @@ func NewManager(nodeAddr string, db data.MasterQ) (*Manager, error) {
 	m := &Manager{
 		client: client,
 		db:     db,
+		log:    log,
 	}
 
 	return m, nil
@@ -22,6 +24,7 @@ func NewManager(nodeAddr string, db data.MasterQ) (*Manager, error) {
 type Manager struct {
 	client *electrum.Client
 	db     data.MasterQ
+	log    *logan.Entry
 }
 
 func (m *Manager) Close() error {
