@@ -44,29 +44,37 @@ func (m *Manager) syncHistory(address string) error {
 		}
 
 		// TODO: Put this in a transaction
-		m.db.Transactions().Insert(TxHdrToData(txHdr))
+		err = m.db.Transaction(func(q data.MasterQ) error {
+			m.db.Transactions().Insert(TxHdrToData(txHdr))
+	
+			for _, in := range tx.Vin {
+				err = m.db.Utxos().Spend(in.TxID, in.Vout, hdr.Height)
+				if err != nil {
+					return err
+				}
+			}
+	
+			for _, out := range tx.Vout {
+				address := out.ScriptPubKey.Addresses[0]
+				exists, err = m.db.Addresses().Exists(address)
+				if err != nil {
+					return err
+				}
+				if !exists {
+					continue // Address is not tracked
+				}
+	
+				_, err = m.db.Utxos().Insert(VoutToData(out, txHdr.TxHash, hdr.Height))
+				if err != nil {
+					return err
+				}
+			}
 
-		for _, in := range tx.Vin {
-			err = m.db.Utxos().Spend(in.TxID, in.Vout, hdr.Height)
-			if err != nil {
-				return err
-			}
-		}
+			return nil
+		})
 
-		for _, out := range tx.Vout {
-			address := out.ScriptPubKey.Addresses[0]
-			exists, err = m.db.Addresses().Exists(address)
-			if err != nil {
-				return err
-			}
-			if !exists {
-				continue // Address is not tracked
-			}
-
-			_, err = m.db.Utxos().Insert(VoutToData(out, txHdr.TxHash, hdr.Height))
-			if err != nil {
-				return err
-			}
+		if err != nil {
+			return err
 		}
 	}
 
