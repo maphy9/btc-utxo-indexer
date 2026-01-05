@@ -61,8 +61,6 @@ func (c *Client) listen() {
 			continue
 		}
 
-		log.Printf("res = %d", res.ID)
-
 		c.mu.Lock()
 		ch, ok := c.responses[res.ID]
 		if ok {

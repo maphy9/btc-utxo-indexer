@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS addresses
 
 CREATE TABLE IF NOT EXISTS user_addresses
 (
-  address_id bigint REFERENCES addresses (id) NOT NULL,
+  address_id bigint REFERENCES addresses (id) ON DELETE CASCADE NOT NULL,
   user_id bigint REFERENCES users (id) ON DELETE CASCADE NOT NULL,
   UNIQUE (address_id, user_id)
 );
@@ -40,9 +40,8 @@ CREATE TABLE IF NOT EXISTS utxos
   address text REFERENCES addresses (address) ON DELETE CASCADE NOT NULL,
   tx_hash text REFERENCES transactions (tx_hash) ON DELETE CASCADE NOT NULL,
   tx_pos integer NOT NULL,
+  spent_tx_hash text REFERENCES transactions (tx_hash) ON DELETE SET NULL,
   value bigint NOT NULL,
-  created_height integer REFERENCES headers (height) ON DELETE CASCADE NOT NULL,
-  spent_height integer REFERENCES headers (height) ON DELETE SET NULL,
   PRIMARY KEY (tx_hash, tx_pos)
 );
 

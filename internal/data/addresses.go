@@ -10,6 +10,7 @@ type AddressesQ interface {
 	GetAllAddresses() ([]string, error)
 	GetStatus(address string) (string, error)
 	GetBalance(ctx context.Context, address string) (int64, error)
+	GetTransactions(ctx context.Context, address string) ([]AddressTransaction, error)
 	InsertAddress(ctx context.Context, address string) (*Address, error)
 	InsertUserAddress(ctx context.Context, userAddress UserAddress) (*UserAddress, error)
 	UpdateStatus(address, status string) error
@@ -25,4 +26,10 @@ type Address struct {
 type UserAddress struct {
 	AddressID int64 `db:"address_id" structs:"address_id"`
 	UserID    int64 `db:"user_id" structs:"user_id"`
+}
+
+type AddressTransaction struct {
+	TxHash        string `db:"tx_hash" json:"tx_hash"`
+	SpentValue    int64  `db:"spent_value" json:"spent_value"`
+	ReceivedValue int64  `db:"received_value" json:"received_value"`
 }

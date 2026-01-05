@@ -10,12 +10,12 @@ import (
 	"gitlab.com/distributed_lab/ape"
 )
 
-func GetBalance(w http.ResponseWriter, r *http.Request) {
+func GetTransactions(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := helpers.Log(r)
 	db := helpers.DB(r)
-	address := chi.URLParam(r, "address")
 	userID := helpers.UserID(r)
+	address := chi.URLParam(r, "address")
 
 	found, err := helpers.CheckAddress(ctx, db, userID, address)
 	if err != nil {
@@ -34,15 +34,15 @@ func GetBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	balance, err := db.Addresses().GetBalance(ctx, address)
+	transactions, err := db.Addresses().GetTransactions(ctx, address)
 	if err != nil {
-		logger.WithError(err).Error("failed to get address balance")
+		logger.WithError(err).Error("failed to get address transactions")
 		ape.RenderErr(w, apierrors.NewApiError(
 			http.StatusInternalServerError,
-			"Failed to get address balance",
+			"Failed to get address transactions",
 		))
 		return
 	}
 
-	ape.Render(w, responses.NewGetBalanceResponse(balance))
+	ape.Render(w, responses.NewGetTransactionsResponse(transactions))
 }

@@ -36,6 +36,7 @@ func (s *service) router() chi.Router {
 			r.Get("/", handlers.GetAddresses)
 			r.Get("/{address}/utxos", handlers.GetUtxos)
 			r.Get("/{address}/balance", handlers.GetBalance)
+			r.Get("/{address}/txs", handlers.GetTransactions)
 		})
 	})
 
