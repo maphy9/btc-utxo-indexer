@@ -91,10 +91,11 @@ func (m *Manager) SyncHeaders() error {
 	return nil
 }
 
-func (m *Manager) ListenHeaders() error {
+func (m *Manager) ListenHeaders() {
 	notifyChan, err := m.client.SubscribeHeaders()
 	if err != nil {
-		return err
+		log.Fatalf("Failed to subscribe to headers: %v", err)
+		return
 	}
 
 	for rawNextHdr := range notifyChan {
@@ -102,7 +103,8 @@ func (m *Manager) ListenHeaders() error {
 
 		localTip, err := m.db.Headers().GetTipHeader()
 		if err != nil {
-			return err
+			log.Fatal("Failed to get local tip header: %v", err)
+			return
 		}
 		if rawNextHdr.Height <= localTip.Height {
 			continue
@@ -110,29 +112,31 @@ func (m *Manager) ListenHeaders() error {
 
 		if rawNextHdr.Height > localTip.Height+1 {
 			if err := m.SyncHeaders(); err != nil {
-				return err
+				log.Fatal("Failed to sync headers: %v", err)
+				return
 			}
 			continue
 		}
 
 		nextHdr, err := headerToData(&rawNextHdr)
 		if err != nil {
-			return err
+			log.Fatal("Failed to convert electrum header into data header: %v", err)
+			return
 		}
 		reorgDetected, err := m.handleReorg(localTip, nextHdr)
 		if reorgDetected {
 			if err := m.SyncHeaders(); err != nil {
-				return err
+				log.Fatal("Failed to convert electrum header into data header: %v", err)
+				return
 			}
 		} else {
 			_, err = m.db.Headers().Insert(nextHdr)
 			if err != nil {
-				return err
+				log.Fatal("Failed to insert new header: %v", err)
+				return
 			}
 		}
 	}
-
-	return nil
 }
 
 func headerToData(rawHdr *electrum.Header) (*data.Header, error) {

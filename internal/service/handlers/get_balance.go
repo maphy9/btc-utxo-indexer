@@ -10,21 +10,21 @@ import (
 	"gitlab.com/distributed_lab/ape"
 )
 
-func GetUtxos(w http.ResponseWriter, r *http.Request) {
+func GetBalance(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := helpers.Log(r)
 	db := helpers.DB(r)
 	address := chi.URLParam(r, "address")
 
-	utxos, err := db.Utxos().GetActiveByAddress(ctx, address)
+	balance, err := db.Addresses().GetBalance(ctx, address)
 	if err != nil {
-		logger.WithError(err).Error("failed to get utxos")
+		logger.WithError(err).Error("failed to get address balance")
 		ape.RenderErr(w, apierrors.NewApiError(
 			http.StatusInternalServerError,
-			"Failed to get utxos",
+			"Failed to get address balance",
 		))
 		return
 	}
 
-	ape.Render(w, responses.NewGetUtxosResponse(utxos))
+	ape.Render(w, responses.NewGetBalanceResponse(balance))
 }

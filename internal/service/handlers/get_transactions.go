@@ -10,21 +10,21 @@ import (
 	"gitlab.com/distributed_lab/ape"
 )
 
-func GetUtxos(w http.ResponseWriter, r *http.Request) {
+func GetTransactions(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := helpers.Log(r)
 	db := helpers.DB(r)
 	address := chi.URLParam(r, "address")
 
-	utxos, err := db.Utxos().GetActiveByAddress(ctx, address)
+	transactions, err := db.Addresses().GetTransactions(ctx, address)
 	if err != nil {
-		logger.WithError(err).Error("failed to get utxos")
+		logger.WithError(err).Error("failed to get address transactions")
 		ape.RenderErr(w, apierrors.NewApiError(
 			http.StatusInternalServerError,
-			"Failed to get utxos",
+			"Failed to get address transactions",
 		))
 		return
 	}
 
-	ape.Render(w, responses.NewGetUtxosResponse(utxos))
+	ape.Render(w, responses.NewGetTransactionsResponse(transactions))
 }

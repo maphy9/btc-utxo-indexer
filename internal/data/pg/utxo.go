@@ -23,19 +23,20 @@ type utxosQ struct {
 	sql squirrel.StatementBuilderType
 }
 
-func (m *utxosQ) GetByAddress(ctx context.Context, address string) ([]data.Utxo, error) {
+func (m *utxosQ) GetActiveByAddress(ctx context.Context, address string) ([]data.Utxo, error) {
 	query := m.sql.Select("*").
 		From(utxosTableName).
-		Where("address = ?", address)
+		Where("address = ?", address).
+		Where("spent_tx_hash IS NULL")
 
 	var result []data.Utxo
 	err := m.db.SelectContext(ctx, &result, query)
 	return result, err
 }
 
-func (m *utxosQ) Spend(txHash string, txPos int, spentHeight int) error {
+func (m *utxosQ) Spend(txHash string, txPos int, spentTxHash string) error {
 	query := m.sql.Update(utxosTableName).
-		Set("spent_height", spentHeight).
+		Set("spent_tx_hash", spentTxHash).
 		Where(squirrel.Eq{"tx_hash": txHash, "tx_pos": txPos})
 
 	return m.db.Exec(query)

@@ -27,13 +27,11 @@ func (m *Manager) syncHistory(address string) error {
 
 		tx, err := m.client.GetTransaction(txHdr.TxHash)
 		if err != nil {
-			log.Printf("GetTransaction err: %v", err)
 			return err
 		}
 
 		txMerkle, err := m.client.GetTransactionMerkle(txHdr.TxHash, txHdr.Height)
 		if err != nil {
-			log.Printf("GetTransactionMerkle err: %v", err)
 			return err
 		}
 
@@ -50,10 +48,13 @@ func (m *Manager) syncHistory(address string) error {
 		}
 
 		err = m.db.Transaction(func(q data.MasterQ) error {
-			q.Transactions().Insert(TxHdrToData(txHdr))
+			_, err = q.Transactions().Insert(TxHdrToData(txHdr))
+			if err != nil {
+				return err
+			}
 
 			for _, in := range tx.Vin {
-				err = q.Utxos().Spend(in.TxID, in.Vout, hdr.Height)
+				err = q.Utxos().Spend(in.TxID, in.Vout, tx.TxID)
 				if err != nil {
 					return err
 				}
@@ -89,11 +90,10 @@ func (m *Manager) syncHistory(address string) error {
 func VoutToData(vout electrum.UtxoVout, txHash string, height int) data.Utxo {
 	sats := int64(vout.Value * 100_000_000)
 	return data.Utxo{
-		Address:       vout.ScriptPubKey.Addresses[0],
-		TxHash:        txHash,
-		TxPos:         vout.N,
-		Value:         sats,
-		CreatedHeight: height,
+		Address: vout.ScriptPubKey.Addresses[0],
+		TxHash:  txHash,
+		TxPos:   vout.N,
+		Value:   sats,
 	}
 }
 

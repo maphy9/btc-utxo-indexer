@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/fatih/structs"
@@ -46,6 +47,9 @@ func (m *addressesQ) GetUserAddress(ctx context.Context, userID int64, address s
 
 	var result data.UserAddress
 	err := m.db.GetContext(ctx, &result, query)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	return &result, err
 }
 
@@ -55,6 +59,53 @@ func (m *addressesQ) GetAllAddresses() ([]string, error) {
 
 	var result []string
 	err := m.db.Select(&result, query)
+	return result, err
+}
+
+func (m *addressesQ) GetStatus(address string) (string, error) {
+	query := m.sql.Select("status").
+		From(addressesTableName).
+		Where("address = ?", address)
+	var status string
+	err := m.db.Get(&status, query)
+	return status, err
+}
+
+func (m *addressesQ) GetBalance(ctx context.Context, address string) (int64, error) {
+	query := m.sql.Select("SUM(value)").
+		From(utxosTableName).
+		Where("address = ?", address).
+		Where("spent_tx_hash IS NULL")
+
+	var result int64
+	err := m.db.GetContext(ctx, &result, query)
+	return result, err
+}
+
+func (m *addressesQ) GetTransactions(ctx context.Context, address string) ([]data.AddressTransaction, error) {
+	query := squirrel.Expr(`
+	SELECT 
+	t.tx_hash,
+	SUM(sub.received) as received_value,
+	SUM(sub.spent) as spent_value
+	FROM (
+		SELECT tx_hash, value as received, 0 as spent
+		FROM utxos 
+		WHERE address = $1
+		
+		UNION ALL
+		
+		SELECT spent_tx_hash as tx_hash, 0 as received, value as spent
+		FROM utxos 
+		WHERE address = $1 AND spent_tx_hash IS NOT NULL
+		) sub
+		JOIN transactions t ON t.tx_hash = sub.tx_hash
+		GROUP BY t.tx_hash, t.height
+		ORDER BY t.height DESC;
+	`, address)
+
+	var result []data.AddressTransaction
+	err := m.db.SelectContext(ctx, &result, query)
 	return result, err
 }
 
@@ -71,15 +122,6 @@ func (m *addressesQ) InsertAddress(ctx context.Context, address string) (*data.A
 	var result data.Address
 	err := m.db.GetContext(ctx, &result, query)
 	return &result, err
-}
-
-func (m *addressesQ) GetStatus(address string) (string, error) {
-	query := m.sql.Select("status").
-		From(addressesTableName).
-		Where("address = ?", address)
-	var status string
-	err := m.db.Get(&status, query)
-	return status, err
 }
 
 func (m *addressesQ) InsertUserAddress(ctx context.Context, userAddress data.UserAddress) (*data.UserAddress, error) {

@@ -26,15 +26,20 @@ func (s *service) router() chi.Router {
 	r.Post("/register", handlers.Register)
 	r.Post("/refresh", handlers.Refresh)
 
-	r.Group(func(r chi.Router) {
+	r.Route("/addresses", func(r chi.Router) {
 		r.Use(
 			middleware.AuthMiddleware,
 		)
+		r.Post("/", handlers.AddAddress)
+		r.Get("/", handlers.GetAddresses)
 
-		r.Route("/addresses", func(r chi.Router) {
-			r.Post("/", handlers.AddAddress)
-			r.Get("/", handlers.GetAddresses)
-			r.Get("/{address}/utxos", handlers.GetUtxos)
+		r.Route("/{address}", func(r chi.Router) {
+			r.Use(
+				middleware.AddressMiddleware,
+			)
+			r.Get("/utxos", handlers.GetUtxos)
+			r.Get("/balance", handlers.GetBalance)
+			r.Get("/txs", handlers.GetTransactions)
 		})
 	})
 

@@ -3,7 +3,6 @@ package electrum
 import (
 	"encoding/hex"
 	"encoding/json"
-	"log"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -38,7 +37,6 @@ func (c *Client) GetTransaction(txHash string) (*Transaction, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("RECEIVED RAW TRANSACTION: %v", rawRes)
 
 	var hexStr string
 	if err := json.Unmarshal(rawRes, &hexStr); err != nil {
