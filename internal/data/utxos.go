@@ -3,7 +3,7 @@ package data
 import "context"
 
 type UtxosQ interface {
-	GetActivetByAddress(ctx context.Context, address string) ([]Utxo, error)
+	GetActiveByAddress(ctx context.Context, address string) ([]Utxo, error)
 	Spend(txHash string, txPos int, spentHeight int) error
 	Insert(utxo Utxo) (*Utxo, error)
 }

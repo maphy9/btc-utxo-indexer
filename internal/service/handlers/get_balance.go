@@ -15,6 +15,24 @@ func GetBalance(w http.ResponseWriter, r *http.Request) {
 	logger := helpers.Log(r)
 	db := helpers.DB(r)
 	address := chi.URLParam(r, "address")
+	userID := helpers.UserID(r)
+
+	found, err := helpers.CheckAddress(ctx, db, userID, address)
+	if err != nil {
+		logger.WithError(err).Error("failed to check the address")
+		ape.RenderErr(w, apierrors.NewApiError(
+			http.StatusInternalServerError,
+			"Failed to check the address",
+		))
+		return
+	}
+	if !found {
+		ape.RenderErr(w, apierrors.NewApiError(
+			http.StatusNotFound,
+			"Address not found",
+		))
+		return
+	}
 
 	balance, err := db.Addresses().GetBalance(ctx, address)
 	if err != nil {
