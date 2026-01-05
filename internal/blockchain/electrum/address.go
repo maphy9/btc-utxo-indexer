@@ -1,11 +1,12 @@
 package electrum
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 )
 
-func (c *Client) SubscribeAddress(address string) (<-chan string, error) {
+func (c *Client) SubscribeAddress(ctx context.Context, address string) (<-chan string, error) {
 	scripthash, err := addressToScripthash(address)
 	if err != nil {
 		return nil, err
@@ -20,7 +21,7 @@ func (c *Client) SubscribeAddress(address string) (<-chan string, error) {
 	c.addrSubs[scripthash] = notifyChan
 	c.mu.Unlock()
 
-	message, err := c.request("blockchain.scripthash.subscribe", []any{scripthash})
+	message, err := c.request(ctx, "blockchain.scripthash.subscribe", []any{scripthash})
 	if err != nil {
 		c.mu.Lock()
 		delete(c.addrSubs, scripthash)

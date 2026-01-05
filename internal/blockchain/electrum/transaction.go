@@ -1,6 +1,7 @@
 package electrum
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 
@@ -32,8 +33,8 @@ type TransactionMerkle struct {
 	Pos    int      `json:"pos"`
 }
 
-func (c *Client) GetTransaction(txHash string) (*Transaction, error) {
-	rawRes, err := c.request("blockchain.transaction.get", []any{txHash})
+func (c *Client) GetTransaction(ctx context.Context, txHash string) (*Transaction, error) {
+	rawRes, err := c.request(ctx, "blockchain.transaction.get", []any{txHash})
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +55,8 @@ func (c *Client) GetTransaction(txHash string) (*Transaction, error) {
 	return btcutilToTransaction(btcutilTx), nil
 }
 
-func (c *Client) GetTransactionMerkle(txHash string, height int) (*TransactionMerkle, error) {
-	rawTxMerkle, err := c.request("blockchain.transaction.get_merkle", []any{txHash, height})
+func (c *Client) GetTransactionMerkle(ctx context.Context, txHash string, height int) (*TransactionMerkle, error) {
+	rawTxMerkle, err := c.request(ctx, "blockchain.transaction.get_merkle", []any{txHash, height})
 	if err != nil {
 		return nil, err
 	}

@@ -1,11 +1,13 @@
 package data
 
+import "context"
+
 type HeadersQ interface {
-	GetByHeight(height int) (*Header, error)
-	GetTipHeader() (*Header, error)
-	InsertBatch(hdrs []*Header) error
-	Insert(hdr *Header) (*Header, error)
-	DeleteByHeight(height int) error
+	GetByHeight(ctx context.Context, height int) (*Header, error)
+	GetTipHeader(ctx context.Context) (*Header, error)
+	InsertBatch(ctx context.Context, hdrs []*Header) error
+	Insert(ctx context.Context, hdr *Header) (*Header, error)
+	DeleteByHeight(ctx context.Context, height int) error
 }
 
 type Header struct {

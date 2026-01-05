@@ -1,6 +1,7 @@
 package electrum
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"sync/atomic"
@@ -13,7 +14,7 @@ type request struct {
 	Params []any  `json:"params"`
 }
 
-func (c *Client) request(method string, params []any) (json.RawMessage, error) {
+func (c *Client) request(ctx context.Context, method string, params []any) (json.RawMessage, error) {
 	id := atomic.AddUint64(&c.nextID, 1)
 	req := request{
 		ID:     id,
@@ -35,6 +36,7 @@ func (c *Client) request(method string, params []any) (json.RawMessage, error) {
 		return nil, err
 	}
 
+	timeoutCtx, _ := context.WithTimeout(ctx, 5*time.Second)
 	select {
 	case res, ok := <-resChan:
 		if !ok {
@@ -44,7 +46,7 @@ func (c *Client) request(method string, params []any) (json.RawMessage, error) {
 			return nil, errors.New(res.Error.Message)
 		}
 		return res.Result, nil
-	case <-time.After(5 * time.Second):
+	case <-timeoutCtx.Done():
 		return nil, errors.New("timeout")
 	}
 }

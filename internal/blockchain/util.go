@@ -2,7 +2,10 @@ package blockchain
 
 import (
 	"encoding/hex"
+	"errors"
 
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
+	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"github.com/maphy9/btc-utxo-indexer/internal/util"
 )
 
@@ -22,4 +25,52 @@ func verifyMerkleProof(merkle []string, txHash string, txPos int, root string) b
 	}
 	myRoot := hex.EncodeToString(util.Reverse(prevHash))
 	return root == myRoot
+}
+
+func electrumHeaderToData(hdr *electrum.Header) (*data.Header, error) {
+	if len(hdr.Hex) != 160 {
+		return nil, errors.New("bad header hex")
+	}
+	bytes, err := hex.DecodeString(hdr.Hex)
+	if err != nil {
+		return nil, err
+	}
+	hash := hex.EncodeToString(util.Reverse(util.DoubleHash(bytes)))
+	parentHash := hex.EncodeToString(util.Reverse(bytes[4:36]))
+	root := hex.EncodeToString(util.Reverse(bytes[36:68]))
+	return &data.Header{
+		Hash:       hash,
+		ParentHash: parentHash,
+		Root:       root,
+		Height:     hdr.Height,
+	}, nil
+}
+
+func electrumHeadersToData(rawHdrs []electrum.Header) ([]*data.Header, error) {
+	hdrs := make([]*data.Header, len(rawHdrs))
+	for i, rawHdr := range rawHdrs {
+		hdr, err := electrumHeaderToData(&rawHdr)
+		if err != nil {
+			return nil, err
+		}
+		hdrs[i] = hdr
+	}
+	return hdrs, nil
+}
+
+func voutToData(vout electrum.UtxoVout, txHash string, height int) data.Utxo {
+	sats := int64(vout.Value * 100_000_000)
+	return data.Utxo{
+		Address: vout.ScriptPubKey.Addresses[0],
+		TxHash:  txHash,
+		TxPos:   vout.N,
+		Value:   sats,
+	}
+}
+
+func txHdrToData(tx electrum.TransactionHeader) data.Transaction {
+	return data.Transaction{
+		Height: tx.Height,
+		TxHash: tx.TxHash,
+	}
 }

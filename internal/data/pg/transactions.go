@@ -1,6 +1,8 @@
 package pg
 
 import (
+	"context"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/fatih/structs"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
@@ -23,23 +25,23 @@ type transactionsQ struct {
 	sql squirrel.StatementBuilderType
 }
 
-func (m *transactionsQ) Exists(txHash string) (bool, error) {
+func (m *transactionsQ) Exists(ctx context.Context, txHash string) (bool, error) {
 	query := m.sql.Select("COUNT(*)").
 		From(transactionsTableName).
 		Where("tx_hash = ?", txHash)
 
 	var result int
-	err := m.db.Get(&result, query)
+	err := m.db.GetContext(ctx, &result, query)
 	return result > 0, err
 }
 
-func (m *transactionsQ) Insert(tx data.Transaction) (*data.Transaction, error) {
+func (m *transactionsQ) Insert(ctx context.Context, tx data.Transaction) (*data.Transaction, error) {
 	clauses := structs.Map(tx)
 	query := m.sql.Insert(transactionsTableName).
 		SetMap(clauses).
 		Suffix("RETURNING *")
 
 	var result data.Transaction
-	err := m.db.Get(&result, query)
+	err := m.db.GetContext(ctx, &result, query)
 	return &result, err
 }

@@ -3,8 +3,12 @@ package service
 import (
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/maphy9/btc-utxo-indexer/internal/blockchain"
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
 	"github.com/maphy9/btc-utxo-indexer/internal/config"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"github.com/maphy9/btc-utxo-indexer/internal/data/pg"
@@ -37,7 +41,11 @@ func newService(cfg config.Config) (*service, error) {
 	db := pg.NewMasterQ(cfg.DB())
 	log := cfg.Log()
 
-	manager, err := blockchain.NewManager("electrum.blockstream.info:50002", db, log)
+	client, err := electrum.NewClient("electrum.blockstream.info:50002")
+	if err != nil {
+		return nil, err
+	}
+	manager, err := blockchain.NewManager(client, db, log)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +70,13 @@ func Run(cfg config.Config) {
 	if err != nil {
 		panic(err)
 	}
-	if err := service.run(); err != nil {
-		panic(err)
-	}
+	go func() {
+		if err := service.run(); err != nil {
+			panic(err)
+		}
+	}()
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+	<-shutdown
+	service.manager.Close()
 }

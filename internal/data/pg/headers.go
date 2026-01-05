@@ -1,6 +1,7 @@
 package pg
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/Masterminds/squirrel"
@@ -25,26 +26,26 @@ type headersQ struct {
 	sql squirrel.StatementBuilderType
 }
 
-func (m *headersQ) GetByHeight(height int) (*data.Header, error) {
+func (m *headersQ) GetByHeight(ctx context.Context, height int) (*data.Header, error) {
 	query := m.sql.Select("*").
 		From(headersTableName).
 		Where("height = ?", height)
 
 	var result data.Header
-	err := m.db.Get(&result, query)
+	err := m.db.GetContext(ctx, &result, query)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	return &result, err
 }
 
-func (m *headersQ) GetTipHeader() (*data.Header, error) {
+func (m *headersQ) GetTipHeader(ctx context.Context) (*data.Header, error) {
 	query := m.sql.Select("*").
 		From(headersTableName).
 		Where("height = (SELECT COALESCE(MAX(height), -1) FROM headers)")
 
 	var result data.Header
-	err := m.db.Get(&result, query)
+	err := m.db.GetContext(ctx, &result, query)
 	if err == sql.ErrNoRows {
 		return &data.Header{
 			Height: -1,
@@ -53,7 +54,7 @@ func (m *headersQ) GetTipHeader() (*data.Header, error) {
 	return &result, err
 }
 
-func (m *headersQ) InsertBatch(hdrs []*data.Header) error {
+func (m *headersQ) InsertBatch(ctx context.Context, hdrs []*data.Header) error {
 	if len(hdrs) == 0 {
 		return nil
 	}
@@ -65,22 +66,22 @@ func (m *headersQ) InsertBatch(hdrs []*data.Header) error {
 		query = query.Values(hdr.Height, hdr.Hash, hdr.ParentHash, hdr.Root)
 	}
 
-	return m.db.Exec(query)
+	return m.db.ExecContext(ctx, query)
 }
 
-func (m *headersQ) Insert(hdr *data.Header) (*data.Header, error) {
+func (m *headersQ) Insert(ctx context.Context, hdr *data.Header) (*data.Header, error) {
 	clauses := structs.Map(hdr)
 	query := m.sql.Insert(headersTableName).
 		SetMap(clauses).
 		Suffix("RETURNING *")
 
 	var result data.Header
-	err := m.db.Get(&result, query)
+	err := m.db.GetContext(ctx, &result, query)
 	return &result, err
 }
 
-func (m *headersQ) DeleteByHeight(height int) error {
+func (m *headersQ) DeleteByHeight(ctx context.Context, height int) error {
 	query := m.sql.Delete(headersTableName).
 		Where("height = ?", height)
-	return m.db.Exec(query)
+	return m.db.ExecContext(ctx, query)
 }
