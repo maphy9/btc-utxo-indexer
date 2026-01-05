@@ -73,6 +73,15 @@ func (m *addressesQ) InsertAddress(ctx context.Context, address string) (*data.A
 	return &result, err
 }
 
+func (m *addressesQ) GetStatus(address string) (string, error) {
+	query := m.sql.Select("status").
+		From(addressesTableName).
+		Where("address = ?", address)	
+	var status string
+	err := m.db.Get(&status, query)
+	return status, err
+}
+
 func (m *addressesQ) InsertUserAddress(ctx context.Context, userAddress data.UserAddress) (*data.UserAddress, error) {
 	clauses := structs.Map(userAddress)
 	query := m.sql.Insert(userAddressesTableName).
@@ -84,26 +93,11 @@ func (m *addressesQ) InsertUserAddress(ctx context.Context, userAddress data.Use
 	return &result, err
 }
 
-func (m *addressesQ) UpdateStatus(address, status string) (string, error) {
-	var oldStatus string
-	err := m.db.Transaction(func() error {
-		stmt := m.sql.Select("status").
-			From(addressesTableName).
-			Where(squirrel.Eq{"address": address}).
-			Suffix("FOR UPDATE")
-
-		if err := m.db.Get(&oldStatus, stmt); err != nil {
-			return err
-		}
-
-		update := m.sql.Update(addressesTableName).
-			Set("status", status).
-			Where(squirrel.Eq{"address": address})
-
-		err := m.db.Exec(update)
-		return err
-	})
-	return oldStatus, err
+func (m *addressesQ) UpdateStatus(address, status string) error {
+	query := m.sql.Update(addressesTableName).
+		Set("status", status).
+		Where("address = ?", address)	
+	return m.db.Exec(query)
 }
 
 func (m *addressesQ) Exists(address string) (bool, error) {

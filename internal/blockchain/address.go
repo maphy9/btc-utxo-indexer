@@ -29,7 +29,7 @@ func (m *Manager) SubscribeSavedAddresses() error {
 
 func (m *Manager) watchAddress(address string, notifyChan <-chan string) {
 	for status := range notifyChan {
-		oldStatus, err := m.db.Addresses().UpdateStatus(address, status)
+		oldStatus, err := m.db.Addresses().GetStatus(address)
 		if err != nil {
 			log.Printf("Failed to get address status: %v", err)
 			continue
@@ -37,6 +37,16 @@ func (m *Manager) watchAddress(address string, notifyChan <-chan string) {
 		if oldStatus == status {
 			continue
 		}
-		m.syncHistory(address)
+		err = m.syncHistory(address)
+		if err != nil {
+			log.Printf("Failed to sync address: %v", err)
+			continue
+		}
+		log.Printf("Finished sync for address %s", address)
+		err = m.db.Addresses().UpdateStatus(address, status)
+		if err != nil {
+			log.Printf("Failed to update address status: %v", err)
+			continue
+		}
 	}
 }

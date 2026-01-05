@@ -1,6 +1,8 @@
 package blockchain
 
 import (
+	"log"
+
 	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"github.com/maphy9/btc-utxo-indexer/internal/util"
@@ -13,6 +15,8 @@ func (m *Manager) syncHistory(address string) error {
 	}
 
 	for _, txHdr := range txHdrs {
+		log.Printf("Received new transaction for address %s: %s", address, txHdr.TxHash)
+
 		exists, err := m.db.Transactions().Exists(txHdr.TxHash)
 		if err != nil {
 			return err
@@ -28,7 +32,7 @@ func (m *Manager) syncHistory(address string) error {
 
 		txMerkle, err := m.client.GetTransactionMerkle(txHdr.TxHash, txHdr.Height)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		hdr, err := m.db.Headers().GetByHeight(txHdr.Height)
@@ -45,10 +49,10 @@ func (m *Manager) syncHistory(address string) error {
 
 		// TODO: Put this in a transaction
 		err = m.db.Transaction(func(q data.MasterQ) error {
-			m.db.Transactions().Insert(TxHdrToData(txHdr))
+			q.Transactions().Insert(TxHdrToData(txHdr))
 	
 			for _, in := range tx.Vin {
-				err = m.db.Utxos().Spend(in.TxID, in.Vout, hdr.Height)
+				err = q.Utxos().Spend(in.TxID, in.Vout, hdr.Height)
 				if err != nil {
 					return err
 				}
@@ -56,7 +60,7 @@ func (m *Manager) syncHistory(address string) error {
 	
 			for _, out := range tx.Vout {
 				address := out.ScriptPubKey.Addresses[0]
-				exists, err = m.db.Addresses().Exists(address)
+				exists, err = q.Addresses().Exists(address)
 				if err != nil {
 					return err
 				}
@@ -64,7 +68,7 @@ func (m *Manager) syncHistory(address string) error {
 					continue // Address is not tracked
 				}
 	
-				_, err = m.db.Utxos().Insert(VoutToData(out, txHdr.TxHash, hdr.Height))
+				_, err = q.Utxos().Insert(VoutToData(out, txHdr.TxHash, hdr.Height))
 				if err != nil {
 					return err
 				}

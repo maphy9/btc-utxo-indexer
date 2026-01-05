@@ -1,6 +1,8 @@
 package pg
 
 import (
+	"database/sql"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/fatih/structs"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
@@ -30,16 +32,24 @@ func (m *headersQ) GetByHeight(height int) (*data.Header, error) {
 
 	var result data.Header
 	err := m.db.Get(&result, query)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	return &result, err
 }
 
 func (m *headersQ) GetTipHeader() (*data.Header, error) {
 	query := m.sql.Select("*").
 		From(headersTableName).
-		Where("height = (SELECT COALESCE(MAX(height), -1)")
+		Where("height = (SELECT COALESCE(MAX(height), -1) FROM headers)")
 
 	var result data.Header
 	err := m.db.Get(&result, query)
+	if err == sql.ErrNoRows {
+		return &data.Header{
+			Height: -1,
+		}, nil
+	}
 	return &result, err
 }
 

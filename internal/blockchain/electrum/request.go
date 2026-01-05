@@ -44,7 +44,7 @@ func (c *Client) request(method string, params []any) (json.RawMessage, error) {
 			return nil, errors.New(res.Error.Message)
 		}
 		return res.Result, nil
-	case <-time.After(5 * time.Second):
+	case <-time.After(30 * time.Second):
 		return nil, errors.New("timeout")
 	}
 }

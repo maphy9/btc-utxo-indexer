@@ -1,6 +1,8 @@
 package blockchain
 
 import (
+	"log"
+
 	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"github.com/maphy9/btc-utxo-indexer/internal/util"
@@ -57,7 +59,7 @@ func (m *Manager) SyncHeaders() error {
 		}
 
 		startHeight := localTip.Height + 1
-		count := min(chunkSize, tipHeight - localTip.Height + 1)
+		count := min(chunkSize, tipHeight - startHeight + 1)
 		rawHdrs, err := m.client.GetHeaders(startHeight, count)
 		if err != nil {
 			return err
@@ -83,6 +85,8 @@ func (m *Manager) SyncHeaders() error {
 		if err != nil {
 			return err
 		}
+
+		log.Printf("Synchronized headers %d-%d", startHeight, startHeight + count)
 	}
 	return nil
 }
@@ -94,6 +98,8 @@ func (m *Manager) ListenHeaders() error {
 	}
 
 	for rawNextHdr := range notifyChan {
+		log.Printf("Received header at height %d", rawNextHdr.Height)
+
 		localTip, err := m.db.Headers().GetTipHeader()
 		if err != nil {
 			return err
