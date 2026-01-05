@@ -23,10 +23,11 @@ type utxosQ struct {
 	sql squirrel.StatementBuilderType
 }
 
-func (m *utxosQ) GetByAddress(ctx context.Context, address string) ([]data.Utxo, error) {
+func (m *utxosQ) GetActivetByAddress(ctx context.Context, address string) ([]data.Utxo, error) {
 	query := m.sql.Select("*").
 		From(utxosTableName).
-		Where("address = ?", address)
+		Where("address = ?", address).
+		Where("spent_height IS NULL")
 
 	var result []data.Utxo
 	err := m.db.SelectContext(ctx, &result, query)
