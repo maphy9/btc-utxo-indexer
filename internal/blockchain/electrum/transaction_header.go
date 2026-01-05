@@ -2,8 +2,6 @@ package electrum
 
 import (
 	"encoding/json"
-
-	"github.com/maphy9/btc-utxo-indexer/internal/util"
 )
 
 type TransactionHeader struct {
@@ -12,7 +10,7 @@ type TransactionHeader struct {
 }
 
 func (c *Client) GetTransactionHeaders(address string) ([]TransactionHeader, error) {
-	scripthash, err := util.AddressToScripthash(address)
+	scripthash, err := addressToScripthash(address)
 	if err != nil {
 		return nil, err
 	}

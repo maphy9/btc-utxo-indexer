@@ -1,4 +1,4 @@
-package util
+package electrum
 
 import (
 	"crypto/sha256"
@@ -9,7 +9,7 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 )
 
-func AddressToScripthash(address string) (string, error) {
+func addressToScripthash(address string) (string, error) {
 	addr, err := btcutil.DecodeAddress(address, &chaincfg.MainNetParams)
 	if err != nil {
 		return "", err

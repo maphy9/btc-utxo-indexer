@@ -3,12 +3,10 @@ package electrum
 import (
 	"encoding/json"
 	"errors"
-
-	"github.com/maphy9/btc-utxo-indexer/internal/util"
 )
 
 func (c *Client) SubscribeAddress(address string) (<-chan string, error) {
-	scripthash, err := util.AddressToScripthash(address)
+	scripthash, err := addressToScripthash(address)
 	if err != nil {
 		return nil, err
 	}
