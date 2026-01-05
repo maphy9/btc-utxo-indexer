@@ -88,7 +88,7 @@ func (c *Client) GetHeader(height int) (*Header, error) {
 		return nil, err
 	}
 	return &Header{
-		Hex: hdrHex,
+		Hex:    hdrHex,
 		Height: height,
 	}, nil
 }

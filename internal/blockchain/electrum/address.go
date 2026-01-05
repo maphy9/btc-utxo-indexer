@@ -43,6 +43,9 @@ func (c *Client) SubscribeAddress(address string) (<-chan string, error) {
 }
 
 func (c *Client) addressNotification(res response) {
+	if res.Params[1] == nil {
+		return
+	}
 	scripthash := res.Params[0].(string)
 	status := res.Params[1].(string)
 	c.mu.Lock()

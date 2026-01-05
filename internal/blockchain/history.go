@@ -27,11 +27,13 @@ func (m *Manager) syncHistory(address string) error {
 
 		tx, err := m.client.GetTransaction(txHdr.TxHash)
 		if err != nil {
+			log.Printf("GetTransaction err: %v", err)
 			return err
 		}
 
 		txMerkle, err := m.client.GetTransactionMerkle(txHdr.TxHash, txHdr.Height)
 		if err != nil {
+			log.Printf("GetTransactionMerkle err: %v", err)
 			return err
 		}
 
@@ -40,24 +42,23 @@ func (m *Manager) syncHistory(address string) error {
 			return err
 		}
 		if hdr == nil {
-			continue // Header is out of sync
+			continue
 		}
 
 		if !util.VerifyMerkleProof(txMerkle.Merkle, txHdr.TxHash, txMerkle.Pos, hdr.Root) {
 			continue
 		}
 
-		// TODO: Put this in a transaction
 		err = m.db.Transaction(func(q data.MasterQ) error {
 			q.Transactions().Insert(TxHdrToData(txHdr))
-	
+
 			for _, in := range tx.Vin {
 				err = q.Utxos().Spend(in.TxID, in.Vout, hdr.Height)
 				if err != nil {
 					return err
 				}
 			}
-	
+
 			for _, out := range tx.Vout {
 				address := out.ScriptPubKey.Addresses[0]
 				exists, err = q.Addresses().Exists(address)
@@ -65,9 +66,9 @@ func (m *Manager) syncHistory(address string) error {
 					return err
 				}
 				if !exists {
-					continue // Address is not tracked
+					continue
 				}
-	
+
 				_, err = q.Utxos().Insert(VoutToData(out, txHdr.TxHash, hdr.Height))
 				if err != nil {
 					return err

@@ -21,7 +21,7 @@ func (m *Manager) handleReorg(localTip, nextHdr *data.Header) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		
+
 		localTip, err = m.db.Headers().GetTipHeader()
 		if err != nil {
 			return false, err
@@ -48,7 +48,7 @@ func (m *Manager) SyncHeaders() error {
 		if err != nil {
 			return err
 		}
-	
+
 		tipHeight, err := m.client.GetTipHeight()
 		if err != nil {
 			return err
@@ -59,7 +59,7 @@ func (m *Manager) SyncHeaders() error {
 		}
 
 		startHeight := localTip.Height + 1
-		count := min(chunkSize, tipHeight - startHeight + 1)
+		count := min(chunkSize, tipHeight-startHeight+1)
 		rawHdrs, err := m.client.GetHeaders(startHeight, count)
 		if err != nil {
 			return err
@@ -86,7 +86,7 @@ func (m *Manager) SyncHeaders() error {
 			return err
 		}
 
-		log.Printf("Synchronized headers %d-%d", startHeight, startHeight + count)
+		log.Printf("Synchronized headers %d-%d", startHeight, startHeight+count)
 	}
 	return nil
 }
@@ -108,7 +108,7 @@ func (m *Manager) ListenHeaders() error {
 			continue
 		}
 
-		if rawNextHdr.Height > localTip.Height + 1 {
+		if rawNextHdr.Height > localTip.Height+1 {
 			if err := m.SyncHeaders(); err != nil {
 				return err
 			}
@@ -127,7 +127,7 @@ func (m *Manager) ListenHeaders() error {
 		} else {
 			_, err = m.db.Headers().Insert(nextHdr)
 			if err != nil {
-					return err
+				return err
 			}
 		}
 	}

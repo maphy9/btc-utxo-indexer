@@ -76,7 +76,7 @@ func (m *addressesQ) InsertAddress(ctx context.Context, address string) (*data.A
 func (m *addressesQ) GetStatus(address string) (string, error) {
 	query := m.sql.Select("status").
 		From(addressesTableName).
-		Where("address = ?", address)	
+		Where("address = ?", address)
 	var status string
 	err := m.db.Get(&status, query)
 	return status, err
@@ -96,14 +96,14 @@ func (m *addressesQ) InsertUserAddress(ctx context.Context, userAddress data.Use
 func (m *addressesQ) UpdateStatus(address, status string) error {
 	query := m.sql.Update(addressesTableName).
 		Set("status", status).
-		Where("address = ?", address)	
+		Where("address = ?", address)
 	return m.db.Exec(query)
 }
 
 func (m *addressesQ) Exists(address string) (bool, error) {
 	query := m.sql.Select("COUNT(*)").
 		From(addressesTableName).
-		Where("address = ?")
+		Where("address = ?", address)
 
 	var result int
 	err := m.db.Get(&result, query)

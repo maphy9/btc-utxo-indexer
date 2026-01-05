@@ -61,12 +61,22 @@ func (c *Client) listen() {
 			continue
 		}
 
+		log.Printf("res = %d", res.ID)
+
 		c.mu.Lock()
-		if ch, ok := c.responses[res.ID]; ok {
-			ch <- res
+		ch, ok := c.responses[res.ID]
+		if ok {
 			delete(c.responses, res.ID)
 		}
 		c.mu.Unlock()
+
+		if ok {
+			select {
+			case ch <- res:
+			default:
+				log.Printf("Warning: Response channel full/abandoned for ID %d", res.ID)
+			}
+		}
 	}
 
 	close(c.hdrsSub)

@@ -73,10 +73,10 @@ func (m *headersQ) Insert(hdr *data.Header) (*data.Header, error) {
 	query := m.sql.Insert(headersTableName).
 		SetMap(clauses).
 		Suffix("RETURNING *")
-	
-		var result data.Header
-		err := m.db.Get(&result, query)
-		return &result, err
+
+	var result data.Header
+	err := m.db.Get(&result, query)
+	return &result, err
 }
 
 func (m *headersQ) DeleteByHeight(height int) error {
