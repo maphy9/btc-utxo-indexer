@@ -9,16 +9,16 @@ import (
 )
 
 type UtxoVout struct {
-	TxHash string
-	Value        int64
-	N            int
+	TxHash  string
+	Value   int64
+	N       int
 	Address string
 }
 
 type UtxoVin struct {
 	SpentTxHash string
-	TxHash string
-	Vout int
+	TxHash      string
+	Vout        int
 }
 
 type TransactionUtxos struct {

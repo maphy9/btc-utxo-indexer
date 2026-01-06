@@ -28,11 +28,11 @@ func (m *transactionsQ) InsertBatch(ctx context.Context, txs []data.Transaction)
 	if len(txs) == 0 {
 		return nil
 	}
-	
+
 	query := m.sql.Insert(transactionsTableName).
 		Columns("tx_hash", "height").
 		Suffix("ON CONFLICT DO NOTHING")
-	
+
 	for _, tx := range txs {
 		query = query.Values(tx.TxHash, tx.Height)
 	}

@@ -29,6 +29,6 @@ type UserAddress struct {
 }
 
 type AddressTransaction struct {
-	TxHash        string `db:"tx_hash" json:"tx_hash"`
-	ValueDelta    int64  `db:"value_delta" json:"value_delta"`
+	TxHash     string `db:"tx_hash" json:"tx_hash"`
+	ValueDelta int64  `db:"value_delta" json:"value_delta"`
 }

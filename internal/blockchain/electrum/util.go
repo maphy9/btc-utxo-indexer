@@ -32,7 +32,7 @@ func extractTransactionUtxos(utilTx *btcutil.Tx) *TransactionUtxos {
 	txHash := utilTx.Hash().String()
 
 	tx := &TransactionUtxos{
-		Vins: make([]UtxoVin, len(msgTx.TxIn)),
+		Vins:  make([]UtxoVin, len(msgTx.TxIn)),
 		Vouts: make([]UtxoVout, len(msgTx.TxOut)),
 	}
 
@@ -51,9 +51,9 @@ func extractTransactionUtxos(utilTx *btcutil.Tx) *TransactionUtxos {
 		}
 
 		tx.Vouts[i] = UtxoVout{
-			TxHash: txHash,
-			Value: out.Value,
-			N:     i,
+			TxHash:  txHash,
+			Value:   out.Value,
+			N:       i,
 			Address: addr,
 		}
 	}

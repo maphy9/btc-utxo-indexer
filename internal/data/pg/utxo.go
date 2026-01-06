@@ -45,7 +45,7 @@ func (m *utxosQ) InsertBatch(ctx context.Context, utxos []data.Utxo) error {
 	if len(utxos) == 0 {
 		return nil
 	}
-	
+
 	query := m.sql.Insert(utxosTableName).
 		Columns("address", "tx_hash", "tx_pos", "value").
 		Suffix("ON CONFLICT DO NOTHING")
