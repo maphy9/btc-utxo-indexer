@@ -1,16 +1,32 @@
 package cli
 
 import (
+	"context"
+
 	"github.com/maphy9/btc-utxo-indexer/internal/blockchain"
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
 	"github.com/maphy9/btc-utxo-indexer/internal/config"
 	"github.com/maphy9/btc-utxo-indexer/internal/data/pg"
 )
 
 func SyncHeaders(cfg config.Config) error {
 	db := pg.NewMasterQ(cfg.DB())
-	manager, err := blockchain.NewManager("electrum.blockstream.info:50002", db)
+	log := cfg.Log()
+
+	client, err := electrum.NewClient("electrum.blockstream.info:50001", false)
 	if err != nil {
 		return err
 	}
-	return manager.SyncHeaders()
+
+	manager, err := blockchain.NewManager(client, db, log)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := manager.Close(); err != nil {
+			log.WithError(err).Error("failed to close manager")
+		}
+	}()
+
+	return manager.SyncHeaders(context.Background())
 }

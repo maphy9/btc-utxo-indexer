@@ -1,40 +1,41 @@
 package blockchain
 
 import (
-	"log"
+	"context"
 
 	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
-	"github.com/maphy9/btc-utxo-indexer/internal/util"
 )
 
 const (
 	chunkSize = 2016
 )
 
-func (m *Manager) handleReorg(localTip, nextHdr *data.Header) (bool, error) {
+func (m *Manager) handleReorg(ctx context.Context, localTip, nextHdr *data.Header) (bool, error) {
 	reorgDetected := false
 	for nextHdr.ParentHash != localTip.Hash {
 		reorgDetected = true
 
-		err := m.db.Headers().DeleteByHeight(localTip.Height)
+		err := m.db.Headers().DeleteByHeight(ctx, localTip.Height)
 		if err != nil {
 			return false, err
 		}
 
-		localTip, err = m.db.Headers().GetTipHeader()
+		localTip, err = m.db.Headers().GetTipHeader(ctx)
 		if err != nil {
 			return false, err
 		}
 		if localTip == nil {
-			break
+			localTip = &data.Header{
+				Height: -1,
+			}
 		}
 
-		rawNextHdr, err := m.client.GetHeader(localTip.Height + 1)
+		rawNextHdr, err := m.client.GetHeader(ctx, localTip.Height+1)
 		if err != nil {
 			return false, err
 		}
-		nextHdr, err = headerToData(rawNextHdr)
+		nextHdr, err = electrumHeaderToData(rawNextHdr)
 		if err != nil {
 			return false, err
 		}
@@ -42,14 +43,19 @@ func (m *Manager) handleReorg(localTip, nextHdr *data.Header) (bool, error) {
 	return reorgDetected, nil
 }
 
-func (m *Manager) SyncHeaders() error {
+func (m *Manager) SyncHeaders(ctx context.Context) error {
 	for {
-		localTip, err := m.db.Headers().GetTipHeader()
+		localTip, err := m.db.Headers().GetTipHeader(ctx)
 		if err != nil {
 			return err
 		}
+		if localTip == nil {
+			localTip = &data.Header{
+				Height: -1,
+			}
+		}
 
-		tipHeight, err := m.client.GetTipHeight()
+		tipHeight, err := m.client.GetTipHeight(ctx)
 		if err != nil {
 			return err
 		}
@@ -60,19 +66,19 @@ func (m *Manager) SyncHeaders() error {
 
 		startHeight := localTip.Height + 1
 		count := min(chunkSize, tipHeight-startHeight+1)
-		rawHdrs, err := m.client.GetHeaders(startHeight, count)
+		rawHdrs, err := m.client.GetHeaders(ctx, startHeight, count)
 		if err != nil {
 			return err
 		}
 
-		dataHdrs, err := headersToData(rawHdrs)
+		dataHdrs, err := electrumHeadersToData(rawHdrs)
 		if err != nil {
 			return err
 		}
 
 		if localTip.Height >= 0 {
 			nextHdr := dataHdrs[0]
-			reorgDetected, err := m.handleReorg(localTip, nextHdr)
+			reorgDetected, err := m.handleReorg(ctx, localTip, nextHdr)
 			if err != nil {
 				return err
 			}
@@ -81,76 +87,83 @@ func (m *Manager) SyncHeaders() error {
 			}
 		}
 
-		err = m.db.Headers().InsertBatch(dataHdrs)
+		err = m.db.Headers().InsertBatch(ctx, dataHdrs)
 		if err != nil {
 			return err
 		}
 
-		log.Printf("Synchronized headers %d-%d", startHeight, startHeight+count)
+		m.log.Infof("synchronized headers %d-%d", startHeight, startHeight+count)
 	}
 	return nil
 }
 
 func (m *Manager) ListenHeaders() {
-	notifyChan, err := m.client.SubscribeHeaders()
+	m.wg.Add(1)
+	defer m.wg.Done()
+
+	notifyChan, err := m.client.SubscribeHeaders(m.ctx)
 	if err != nil {
-		log.Fatalf("Failed to subscribe to headers: %v", err)
+		m.log.WithError(err).Error("failed to subscribe to headers")
 		return
 	}
 
-	for rawNextHdr := range notifyChan {
-		log.Printf("Received header at height %d", rawNextHdr.Height)
-
-		localTip, err := m.db.Headers().GetTipHeader()
-		if err != nil {
-			log.Fatal("Failed to get local tip header: %v", err)
+	for {
+		select {
+		case <-m.ctx.Done():
 			return
-		}
-		if rawNextHdr.Height <= localTip.Height {
-			continue
-		}
-
-		if rawNextHdr.Height > localTip.Height+1 {
-			if err := m.SyncHeaders(); err != nil {
-				log.Fatal("Failed to sync headers: %v", err)
+		case rawNextHdr, ok := <-notifyChan:
+			if !ok {
+				m.log.Info("Headers channed was closed")
 				return
 			}
-			continue
-		}
-
-		nextHdr, err := headerToData(&rawNextHdr)
-		if err != nil {
-			log.Fatal("Failed to convert electrum header into data header: %v", err)
-			return
-		}
-		reorgDetected, err := m.handleReorg(localTip, nextHdr)
-		if reorgDetected {
-			if err := m.SyncHeaders(); err != nil {
-				log.Fatal("Failed to convert electrum header into data header: %v", err)
-				return
-			}
-		} else {
-			_, err = m.db.Headers().Insert(nextHdr)
+			m.log.Infof("received header at height %d", rawNextHdr.Height)
+			err = m.processHeader(m.ctx, rawNextHdr)
 			if err != nil {
-				log.Fatal("Failed to insert new header: %v", err)
-				return
+				m.log.WithError(err).Fatal("failed to process header")
+				continue
 			}
 		}
 	}
 }
 
-func headerToData(rawHdr *electrum.Header) (*data.Header, error) {
-	return util.ParseHeaderHex(rawHdr.Hex, rawHdr.Height)
-}
-
-func headersToData(rawHdrs []electrum.Header) ([]*data.Header, error) {
-	hdrs := make([]*data.Header, len(rawHdrs))
-	for i, rawHdr := range rawHdrs {
-		hdr, err := headerToData(&rawHdr)
-		if err != nil {
-			return nil, err
-		}
-		hdrs[i] = hdr
+func (m *Manager) processHeader(ctx context.Context, rawNextHdr electrum.Header) error {
+	localTip, err := m.db.Headers().GetTipHeader(ctx)
+	if err != nil {
+		return err
 	}
-	return hdrs, nil
+	if localTip == nil {
+		localTip = &data.Header{
+			Height: -1,
+		}
+	}
+
+	if rawNextHdr.Height <= localTip.Height {
+		return err
+	}
+
+	if rawNextHdr.Height > localTip.Height+1 {
+		if err := m.SyncHeaders(ctx); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	nextHdr, err := electrumHeaderToData(&rawNextHdr)
+	if err != nil {
+		return err
+	}
+
+	reorgDetected, err := m.handleReorg(ctx, localTip, nextHdr)
+	if err != nil {
+		return err
+	}
+	if reorgDetected {
+		if err := m.SyncHeaders(ctx); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	_, err = m.db.Headers().Insert(ctx, nextHdr)
+	return err
 }

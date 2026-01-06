@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"crypto/tls"
 	"encoding/json"
-	"log"
 	"net"
 	"sync"
 )
@@ -18,10 +17,16 @@ type Client struct {
 	mu        sync.Mutex
 }
 
-func NewClient(nodeAddr string) (*Client, error) {
-	conn, err := tls.Dial("tcp", nodeAddr, &tls.Config{
-		InsecureSkipVerify: true,
-	})
+func NewClient(nodeAddr string, ssl bool) (*Client, error) {
+	var conn net.Conn
+	var err error
+	if ssl {
+		conn, err = tls.Dial("tcp", nodeAddr, &tls.Config{
+			InsecureSkipVerify: true,
+		})
+	} else {
+		conn, err = net.Dial("tcp", nodeAddr)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +47,6 @@ func (c *Client) listen() {
 	for {
 		line, err := reader.ReadBytes('\n')
 		if err != nil {
-			log.Printf("Connection closed: %v", err)
 			break
 		}
 
@@ -72,7 +76,6 @@ func (c *Client) listen() {
 			select {
 			case ch <- res:
 			default:
-				log.Printf("Warning: Response channel full/abandoned for ID %d", res.ID)
 			}
 		}
 	}

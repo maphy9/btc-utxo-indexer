@@ -1,14 +1,13 @@
 package electrum
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
-
-	"github.com/maphy9/btc-utxo-indexer/internal/util"
 )
 
-func (c *Client) SubscribeAddress(address string) (<-chan string, error) {
-	scripthash, err := util.AddressToScripthash(address)
+func (c *Client) SubscribeAddress(ctx context.Context, address string) (<-chan string, error) {
+	scripthash, err := addressToScripthash(address)
 	if err != nil {
 		return nil, err
 	}
@@ -22,7 +21,7 @@ func (c *Client) SubscribeAddress(address string) (<-chan string, error) {
 	c.addrSubs[scripthash] = notifyChan
 	c.mu.Unlock()
 
-	message, err := c.request("blockchain.scripthash.subscribe", []any{scripthash})
+	message, err := c.request(ctx, "blockchain.scripthash.subscribe", []any{scripthash})
 	if err != nil {
 		c.mu.Lock()
 		delete(c.addrSubs, scripthash)
@@ -46,8 +45,14 @@ func (c *Client) addressNotification(res response) {
 	if res.Params[1] == nil {
 		return
 	}
-	scripthash := res.Params[0].(string)
-	status := res.Params[1].(string)
+	scripthash, ok := res.Params[0].(string)
+	if !ok {
+		return
+	}
+	status, ok := res.Params[1].(string)
+	if !ok {
+		return
+	}
 	c.mu.Lock()
 	if ch, ok := c.addrSubs[scripthash]; ok {
 		select {

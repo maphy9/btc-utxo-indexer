@@ -3,10 +3,10 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/maphy9/btc-utxo-indexer/internal/data/pg"
 	"github.com/maphy9/btc-utxo-indexer/internal/service/errors/apierrors"
 	"github.com/maphy9/btc-utxo-indexer/internal/service/helpers"
 	"github.com/maphy9/btc-utxo-indexer/internal/service/requests"
-	"github.com/maphy9/btc-utxo-indexer/internal/util"
 	"gitlab.com/distributed_lab/ape"
 )
 
@@ -25,7 +25,7 @@ func AddAddress(w http.ResponseWriter, r *http.Request) {
 
 	err = helpers.AddAddress(ctx, db, userID, request.Address)
 	if err != nil {
-		if util.IsUniqueViolation(err) {
+		if pg.IsUniqueViolation(err) {
 			ape.RenderErr(w, apierrors.NewApiError(
 				http.StatusConflict,
 				"This address is already being tracked",

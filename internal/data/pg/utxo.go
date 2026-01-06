@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/fatih/structs"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"gitlab.com/distributed_lab/kit/pgdb"
 )
@@ -34,21 +33,26 @@ func (m *utxosQ) GetActiveByAddress(ctx context.Context, address string) ([]data
 	return result, err
 }
 
-func (m *utxosQ) Spend(txHash string, txPos int, spentTxHash string) error {
+func (m *utxosQ) Spend(ctx context.Context, txHash string, txPos int, spentTxHash string) error {
 	query := m.sql.Update(utxosTableName).
 		Set("spent_tx_hash", spentTxHash).
-		Where(squirrel.Eq{"tx_hash": txHash, "tx_pos": txPos})
+		Where("tx_hash = ? AND tx_pos = ?", txHash, txPos)
 
-	return m.db.Exec(query)
+	return m.db.ExecContext(ctx, query)
 }
 
-func (m *utxosQ) Insert(utxo data.Utxo) (*data.Utxo, error) {
-	clauses := structs.Map(utxo)
-	query := m.sql.Insert(utxosTableName).
-		SetMap(clauses).
-		Suffix("RETURNING *")
+func (m *utxosQ) InsertBatch(ctx context.Context, utxos []data.Utxo) error {
+	if len(utxos) == 0 {
+		return nil
+	}
 
-	var result data.Utxo
-	err := m.db.Get(&result, query)
-	return &result, err
+	query := m.sql.Insert(utxosTableName).
+		Columns("address", "tx_hash", "tx_pos", "value").
+		Suffix("ON CONFLICT DO NOTHING")
+
+	for _, utxo := range utxos {
+		query = query.Values(utxo.Address, utxo.TxHash, utxo.TxPos, utxo.Value)
+	}
+
+	return m.db.ExecContext(ctx, query)
 }

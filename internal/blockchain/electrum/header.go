@@ -1,6 +1,7 @@
 package electrum
 
 import (
+	"context"
 	"encoding/json"
 )
 
@@ -15,8 +16,8 @@ type headersResponse struct {
 	Max   int    `json:"max"`
 }
 
-func (c *Client) SubscribeHeaders() (<-chan Header, error) {
-	rawHdrRes, err := c.request("blockchain.headers.subscribe", []any{})
+func (c *Client) SubscribeHeaders(ctx context.Context) (<-chan Header, error) {
+	rawHdrRes, err := c.request(ctx, "blockchain.headers.subscribe", []any{})
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +44,8 @@ func (c *Client) headerNotification(res response) {
 	}
 }
 
-func (c *Client) GetTipHeight() (int, error) {
-	rawHdrRes, err := c.request("blockchain.headers.subscribe", []any{})
+func (c *Client) GetTipHeight(ctx context.Context) (int, error) {
+	rawHdrRes, err := c.request(ctx, "blockchain.headers.subscribe", []any{})
 	if err != nil {
 		return 0, err
 	}
@@ -56,8 +57,8 @@ func (c *Client) GetTipHeight() (int, error) {
 	return hdr.Height, nil
 }
 
-func (c *Client) GetHeaders(height, count int) ([]Header, error) {
-	rawHdrsRes, err := c.request("blockchain.block.headers", []any{height, count})
+func (c *Client) GetHeaders(ctx context.Context, height, count int) ([]Header, error) {
+	rawHdrsRes, err := c.request(ctx, "blockchain.block.headers", []any{height, count})
 	if err != nil {
 		return nil, err
 	}
@@ -77,8 +78,8 @@ func (c *Client) GetHeaders(height, count int) ([]Header, error) {
 	return hdrs, nil
 }
 
-func (c *Client) GetHeader(height int) (*Header, error) {
-	rawHdrRes, err := c.request("blockchain.block.header", []any{height})
+func (c *Client) GetHeader(ctx context.Context, height int) (*Header, error) {
+	rawHdrRes, err := c.request(ctx, "blockchain.block.header", []any{height})
 	if err != nil {
 		return nil, err
 	}

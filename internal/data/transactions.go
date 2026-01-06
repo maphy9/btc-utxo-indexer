@@ -1,8 +1,9 @@
 package data
 
+import "context"
+
 type TransactionsQ interface {
-	Exists(txHash string) (bool, error)
-	Insert(tx Transaction) (*Transaction, error)
+	InsertBatch(ctx context.Context, txs []Transaction) error
 }
 
 type Transaction struct {

@@ -1,9 +1,8 @@
 package electrum
 
 import (
+	"context"
 	"encoding/json"
-
-	"github.com/maphy9/btc-utxo-indexer/internal/util"
 )
 
 type TransactionHeader struct {
@@ -11,13 +10,13 @@ type TransactionHeader struct {
 	TxHash string `json:"tx_hash"`
 }
 
-func (c *Client) GetTransactionHeaders(address string) ([]TransactionHeader, error) {
-	scripthash, err := util.AddressToScripthash(address)
+func (c *Client) GetTransactionHeaders(ctx context.Context, address string) ([]TransactionHeader, error) {
+	scripthash, err := addressToScripthash(address)
 	if err != nil {
 		return nil, err
 	}
 
-	rawTxHdrs, err := c.request("blockchain.scripthash.get_history", []any{scripthash})
+	rawTxHdrs, err := c.request(ctx, "blockchain.scripthash.get_history", []any{scripthash})
 	if err != nil {
 		return nil, err
 	}

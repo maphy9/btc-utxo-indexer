@@ -86,8 +86,7 @@ func (m *addressesQ) GetTransactions(ctx context.Context, address string) ([]dat
 	query := squirrel.Expr(`
 	SELECT 
 	t.tx_hash,
-	SUM(sub.received) as received_value,
-	SUM(sub.spent) as spent_value
+	SUM(sub.received) - SUM(sub.spent) as value_delta
 	FROM (
 		SELECT tx_hash, value as received, 0 as spent
 		FROM utxos 
