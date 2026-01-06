@@ -74,6 +74,7 @@ func (c *Client) listen() {
 		}
 	}
 
+	// TODO: When connection closes, it starts spamming 0 in the hdrs channel
 	close(c.hdrsSub)
 	c.mu.Lock()
 	for _, resChan := range c.responses {

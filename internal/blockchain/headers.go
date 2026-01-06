@@ -104,7 +104,11 @@ func (m *Manager) ListenHeaders() {
 		select {
 		case <-m.ctx.Done():
 			return
-		case rawNextHdr := <-notifyChan:
+		case rawNextHdr, ok := <-notifyChan:
+			if !ok {
+				m.log.Info("Headers channed was closed")
+				return
+			}
 			m.log.Infof("received header at height %d", rawNextHdr.Height)
 			err = m.processHeader(m.ctx, rawNextHdr)
 			if err != nil {

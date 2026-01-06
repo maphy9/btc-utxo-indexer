@@ -58,7 +58,11 @@ func (m *Manager) watchAddress(address string, notifyChan <-chan string) {
 		select {
 		case <-m.ctx.Done():
 			return
-		case status := <-notifyChan:
+		case status, ok := <-notifyChan:
+			if !ok {
+				m.log.Info("Addresses channed was closed")
+				return
+			}
 			err := m.processAddress(m.ctx, address, status)
 			if err != nil {
 				m.log.WithError(err).Errorf("failed to process addess status update (%s)", address)
