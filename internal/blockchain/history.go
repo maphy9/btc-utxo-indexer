@@ -56,6 +56,9 @@ func (m *Manager) saveTransaction(ctx context.Context, txHdr electrum.Transactio
 		}
 
 		for _, out := range tx.Vout {
+			if len(out.ScriptPubKey.Addresses) == 0 {
+				continue
+			}
 			address := out.ScriptPubKey.Addresses[0]
 			exists, err := q.Addresses().Exists(address)
 			if err != nil {

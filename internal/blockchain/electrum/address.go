@@ -45,8 +45,14 @@ func (c *Client) addressNotification(res response) {
 	if res.Params[1] == nil {
 		return
 	}
-	scripthash := res.Params[0].(string)
-	status := res.Params[1].(string)
+	scripthash, ok := res.Params[0].(string)
+	if !ok {
+		return
+	}
+	status, ok := res.Params[1].(string)
+	if !ok {
+		return
+	}
 	c.mu.Lock()
 	if ch, ok := c.addrSubs[scripthash]; ok {
 		select {

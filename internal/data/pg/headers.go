@@ -47,9 +47,7 @@ func (m *headersQ) GetTipHeader(ctx context.Context) (*data.Header, error) {
 	var result data.Header
 	err := m.db.GetContext(ctx, &result, query)
 	if err == sql.ErrNoRows {
-		return &data.Header{
-			Height: -1,
-		}, nil
+		return nil, nil
 	}
 	return &result, err
 }

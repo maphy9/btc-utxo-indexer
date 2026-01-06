@@ -26,7 +26,9 @@ func (m *Manager) handleReorg(ctx context.Context, localTip, nextHdr *data.Heade
 			return false, err
 		}
 		if localTip == nil {
-			break
+			localTip = &data.Header{
+				Height: -1,
+			}
 		}
 
 		rawNextHdr, err := m.client.GetHeader(ctx, localTip.Height+1)
@@ -46,6 +48,11 @@ func (m *Manager) SyncHeaders(ctx context.Context) error {
 		localTip, err := m.db.Headers().GetTipHeader(ctx)
 		if err != nil {
 			return err
+		}
+		if localTip == nil {
+			localTip = &data.Header{
+				Height: -1,
+			}
 		}
 
 		tipHeight, err := m.client.GetTipHeight(ctx)
@@ -124,6 +131,12 @@ func (m *Manager) processHeader(ctx context.Context, rawNextHdr electrum.Header)
 	if err != nil {
 		return err
 	}
+	if localTip == nil {
+		localTip = &data.Header{
+			Height: -1,
+		}
+	}
+
 	if rawNextHdr.Height <= localTip.Height {
 		return err
 	}
