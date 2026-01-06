@@ -12,6 +12,6 @@ type Utxo struct {
 	Address     string  `db:"address" structs:"address" json:"-"`
 	TxHash      string  `db:"tx_hash" structs:"tx_hash" json:"tx_hash"`
 	TxPos       int     `db:"tx_pos" structs:"tx_pos" json:"tx_pos"`
-	SpentTxHash *string `db:"spent_tx_hash" structs:"spent_tx_hash" json:"spent_tx_hash"`
+	SpentTxHash *string `db:"spent_tx_hash" structs:"spent_tx_hash" json:"-"`
 	Value       int64   `db:"value" structs:"value" json:"value"`
 }

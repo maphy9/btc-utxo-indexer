@@ -32,7 +32,7 @@ func (m *Manager) processAddress(ctx context.Context, address, status string) er
 	if err != nil {
 		return err
 	}
-	
+
 	if oldStatus == status {
 		return err
 	}
