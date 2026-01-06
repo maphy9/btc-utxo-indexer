@@ -17,7 +17,7 @@ type headersResponse struct {
 }
 
 func (c *Client) SubscribeHeaders(ctx context.Context) (<-chan Header, error) {
-	rawHdrRes, err := c.request(ctx, "blockchain.headers.subscribe", nil)
+	rawHdrRes, err := c.request(ctx, "blockchain.headers.subscribe", []any{})
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (c *Client) headerNotification(res response) {
 }
 
 func (c *Client) GetTipHeight(ctx context.Context) (int, error) {
-	rawHdrRes, err := c.request(ctx, "blockchain.headers.subscribe", nil)
+	rawHdrRes, err := c.request(ctx, "blockchain.headers.subscribe", []any{})
 	if err != nil {
 		return 0, err
 	}

@@ -107,7 +107,7 @@ func (c *Client) keepAlive() {
 		select {
 		case <-ticker.C:
 			ctx, cancel := context.WithTimeout(c.ctx, 5 * time.Second)
-			_, err := c.request(ctx, "server.ping", nil)
+			_, err := c.request(ctx, "server.ping", []any{})
 			cancel()
 			if err != nil {
 				c.Close()

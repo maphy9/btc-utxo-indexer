@@ -26,5 +26,13 @@ func (c *Client) GetTransactionHeaders(ctx context.Context, address string) ([]T
 	if err != nil {
 		return nil, err
 	}
-	return txHdrs, nil
+
+	txHdrsFiltered := make([]TransactionHeader, 0, len(txHdrs))
+	for _, txHdr := range txHdrs {
+		if txHdr.Height == -1 {
+			continue  // TODO: handle mempool headers
+		}
+		txHdrsFiltered = append(txHdrsFiltered, txHdr)
+	}
+	return txHdrsFiltered, nil
 }
