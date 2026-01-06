@@ -2,13 +2,18 @@ package electrum
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"net"
 	"sync"
+	"time"
 )
 
 type Client struct {
+	ctx context.Context
+	cancel context.CancelFunc
+
 	conn      net.Conn
 	nextID    uint64
 	responses map[uint64]chan response
@@ -31,7 +36,10 @@ func NewClient(nodeAddr string, ssl bool) (*Client, error) {
 		return nil, err
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	c := &Client{
+		ctx: ctx,
+		cancel: cancel,
 		conn:      conn,
 		responses: make(map[uint64]chan response),
 		addrSubs:  make(map[string]chan string),
@@ -39,6 +47,7 @@ func NewClient(nodeAddr string, ssl bool) (*Client, error) {
 	}
 
 	go c.listen()
+	go c.keepAlive()
 	return c, nil
 }
 
@@ -91,7 +100,22 @@ func (c *Client) listen() {
 	c.mu.Unlock()
 }
 
+func (c *Client) keepAlive() {
+	for {
+		select {
+		case <-time.After(60 * time.Second):
+			_, err := c.request(c.ctx, "server.ping", []any{})
+			if err != nil {
+				return
+			}
+		case <-c.ctx.Done():
+			return
+		}	
+	}
+}
+
 func (c *Client) Close() error {
+	c.cancel()
 	err := c.conn.Close()
 	if err != nil {
 		return err

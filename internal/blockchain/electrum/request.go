@@ -36,7 +36,8 @@ func (c *Client) request(ctx context.Context, method string, params []any) (json
 		return nil, err
 	}
 
-	timeoutCtx, _ := context.WithTimeout(ctx, 5*time.Second)
+	timeoutCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	select {
 	case res, ok := <-resChan:
 		if !ok {
