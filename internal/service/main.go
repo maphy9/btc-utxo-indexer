@@ -41,7 +41,7 @@ func newService(cfg config.Config) (*service, error) {
 	db := pg.NewMasterQ(cfg.DB())
 	log := cfg.Log()
 
-	client, err := electrum.NewClient("electrum.blockstream.info:50001", false)
+	client, err := electrum.NewClient("electrum.blockstream.info:50002", true)
 	if err != nil {
 		return nil, err
 	}

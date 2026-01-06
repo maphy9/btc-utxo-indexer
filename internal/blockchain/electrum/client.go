@@ -89,6 +89,7 @@ func (c *Client) listen() {
 		}
 	}
 
+	c.cancel()
 	close(c.hdrsSub)
 	c.mu.Lock()
 	for _, resChan := range c.responses {
@@ -101,16 +102,20 @@ func (c *Client) listen() {
 }
 
 func (c *Client) keepAlive() {
+	ticker := time.NewTicker(60 * time.Second)
 	for {
 		select {
-		case <-time.After(60 * time.Second):
-			_, err := c.request(c.ctx, "server.ping", []any{})
+		case <-ticker.C:
+			ctx, cancel := context.WithTimeout(c.ctx, 5 * time.Second)
+			_, err := c.request(ctx, "server.ping", nil)
+			cancel()
 			if err != nil {
+				c.Close()
 				return
 			}
 		case <-c.ctx.Done():
 			return
-		}	
+		}
 	}
 }
 
