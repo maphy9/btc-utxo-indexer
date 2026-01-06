@@ -154,6 +154,9 @@ func (m *Manager) processHeader(ctx context.Context, rawNextHdr electrum.Header)
 	}
 
 	reorgDetected, err := m.handleReorg(ctx, localTip, nextHdr)
+	if err != nil {
+		return err
+	}
 	if reorgDetected {
 		if err := m.SyncHeaders(ctx); err != nil {
 			return err

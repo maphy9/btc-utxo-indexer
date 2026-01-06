@@ -22,7 +22,11 @@ func SyncHeaders(cfg config.Config) error {
 	if err != nil {
 		return err
 	}
-	defer manager.Close()
+	defer func() {
+		if err := manager.Close(); err != nil {
+			log.WithError(err).Error("failed to close manager")
+		}
+	}()
 
 	return manager.SyncHeaders(context.Background())
 }

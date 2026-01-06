@@ -78,5 +78,8 @@ func Run(cfg config.Config) {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 	<-shutdown
-	service.manager.Close()
+	err = service.manager.Close()
+	if err != nil {
+		panic(err)
+	}
 }
