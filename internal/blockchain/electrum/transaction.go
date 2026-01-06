@@ -9,20 +9,21 @@ import (
 )
 
 type UtxoVout struct {
-	Value        float64
+	TxHash string
+	Value        int64
 	N            int
-	ScriptPubKey struct {
-		Addresses []string
-	}
+	Address string
 }
 
-type Transaction struct {
-	TxID string
-	Vin  []struct {
-		TxID string
-		Vout int
-	}
-	Vout []UtxoVout
+type UtxoVin struct {
+	SpentTxHash string
+	TxHash string
+	Vout int
+}
+
+type TransactionUtxos struct {
+	Vins  []UtxoVin
+	Vouts []UtxoVout
 }
 
 type TransactionMerkle struct {
@@ -31,7 +32,7 @@ type TransactionMerkle struct {
 	Pos    int      `json:"pos"`
 }
 
-func (c *Client) GetTransaction(ctx context.Context, txHash string) (*Transaction, error) {
+func (c *Client) GetTransaction(ctx context.Context, txHash string) (*TransactionUtxos, error) {
 	rawRes, err := c.request(ctx, "blockchain.transaction.get", []any{txHash})
 	if err != nil {
 		return nil, err
@@ -50,7 +51,7 @@ func (c *Client) GetTransaction(ctx context.Context, txHash string) (*Transactio
 	if err != nil {
 		return nil, err
 	}
-	return btcutilToTransaction(btcutilTx), nil
+	return extractTransactionUtxos(btcutilTx), nil
 }
 
 func (c *Client) GetTransactionMerkle(ctx context.Context, txHash string, height int) (*TransactionMerkle, error) {

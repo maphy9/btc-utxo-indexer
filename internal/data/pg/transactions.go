@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/fatih/structs"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"gitlab.com/distributed_lab/kit/pgdb"
 )
@@ -25,23 +24,18 @@ type transactionsQ struct {
 	sql squirrel.StatementBuilderType
 }
 
-func (m *transactionsQ) Exists(ctx context.Context, txHash string) (bool, error) {
-	query := m.sql.Select("COUNT(*)").
-		From(transactionsTableName).
-		Where("tx_hash = ?", txHash)
-
-	var result int
-	err := m.db.GetContext(ctx, &result, query)
-	return result > 0, err
-}
-
-func (m *transactionsQ) Insert(ctx context.Context, tx data.Transaction) (*data.Transaction, error) {
-	clauses := structs.Map(tx)
+func (m *transactionsQ) InsertBatch(ctx context.Context, txs []data.Transaction) error {
+	if len(txs) == 0 {
+		return nil
+	}
+	
 	query := m.sql.Insert(transactionsTableName).
-		SetMap(clauses).
-		Suffix("RETURNING *")
+		Columns("tx_hash", "height").
+		Suffix("ON CONFLICT DO NOTHING")
+	
+	for _, tx := range txs {
+		query = query.Values(tx.TxHash, tx.Height)
+	}
 
-	var result data.Transaction
-	err := m.db.GetContext(ctx, &result, query)
-	return &result, err
+	return m.db.ExecContext(ctx, query)
 }

@@ -4,8 +4,8 @@ import "context"
 
 type UtxosQ interface {
 	GetActiveByAddress(ctx context.Context, address string) ([]Utxo, error)
-	Spend(txHash string, txPos int, spentTxHash string) error
-	Insert(utxo Utxo) (*Utxo, error)
+	Spend(ctx context.Context, txHash string, txPos int, spentTxHash string) error
+	InsertBatch(ctx context.Context, utxos []Utxo) error
 }
 
 type Utxo struct {

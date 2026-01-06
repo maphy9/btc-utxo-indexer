@@ -13,7 +13,7 @@ func SyncHeaders(cfg config.Config) error {
 	db := pg.NewMasterQ(cfg.DB())
 	log := cfg.Log()
 
-	client, err := electrum.NewClient("electrum.blockstream.info:50002", true)
+	client, err := electrum.NewClient("electrum.blockstream.info:50001", false)
 	if err != nil {
 		return err
 	}

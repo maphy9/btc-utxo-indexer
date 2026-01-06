@@ -37,7 +37,7 @@ func (m *Manager) processAddress(ctx context.Context, address, status string) er
 		return err
 	}
 
-	err = m.syncHistory(m.ctx, address)
+	err = m.syncTransactions(m.ctx, address)
 	if err != nil {
 		return err
 	}

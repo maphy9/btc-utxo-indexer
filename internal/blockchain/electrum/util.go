@@ -27,40 +27,34 @@ func addressToScripthash(address string) (string, error) {
 	return hex.EncodeToString(hash[:]), nil
 }
 
-func btcutilToTransaction(utilTx *btcutil.Tx) *Transaction {
+func extractTransactionUtxos(utilTx *btcutil.Tx) *TransactionUtxos {
 	msgTx := utilTx.MsgTx()
+	txHash := utilTx.Hash().String()
 
-	tx := &Transaction{
-		TxID: utilTx.Hash().String(),
-		Vin: make([]struct {
-			TxID string
-			Vout int
-		}, len(msgTx.TxIn)),
-		Vout: make([]UtxoVout, len(msgTx.TxOut)),
+	tx := &TransactionUtxos{
+		Vins: make([]UtxoVin, len(msgTx.TxIn)),
+		Vouts: make([]UtxoVout, len(msgTx.TxOut)),
 	}
 
 	for i, in := range msgTx.TxIn {
-		tx.Vin[i].TxID = in.PreviousOutPoint.Hash.String()
-		tx.Vin[i].Vout = int(in.PreviousOutPoint.Index)
+		tx.Vins[i].TxHash = in.PreviousOutPoint.Hash.String()
+		tx.Vins[i].Vout = int(in.PreviousOutPoint.Index)
+		tx.Vins[i].SpentTxHash = txHash
 	}
 
 	for i, out := range msgTx.TxOut {
-		valBTC := float64(out.Value) / 100_000_000.0
 		_, addrs, _, _ := txscript.ExtractPkScriptAddrs(out.PkScript, &chaincfg.MainNetParams)
 
-		var addrStrings []string
-		for _, addr := range addrs {
-			addrStrings = append(addrStrings, addr.EncodeAddress())
+		addr := ""
+		if len(addrs) > 0 {
+			addr = addrs[0].String()
 		}
 
-		tx.Vout[i] = UtxoVout{
-			Value: valBTC,
+		tx.Vouts[i] = UtxoVout{
+			TxHash: txHash,
+			Value: out.Value,
 			N:     i,
-			ScriptPubKey: struct {
-				Addresses []string
-			}{
-				Addresses: addrStrings,
-			},
+			Address: addr,
 		}
 	}
 

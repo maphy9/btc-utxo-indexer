@@ -58,19 +58,34 @@ func electrumHeadersToData(rawHdrs []electrum.Header) ([]*data.Header, error) {
 	return hdrs, nil
 }
 
-func voutToData(vout electrum.UtxoVout, txHash string, height int) data.Utxo {
-	sats := int64(vout.Value * 100_000_000)
+func voutsToData(vouts []electrum.UtxoVout) []data.Utxo {
+	utxos := make([]data.Utxo, len(vouts))
+	for i, vout := range vouts {
+		utxos[i] = voutToData(vout)
+	}
+	return utxos
+}
+
+func voutToData(vout electrum.UtxoVout) data.Utxo {
 	return data.Utxo{
-		Address: vout.ScriptPubKey.Addresses[0],
-		TxHash:  txHash,
+		Address: vout.Address,
+		TxHash:  vout.TxHash,
 		TxPos:   vout.N,
-		Value:   sats,
+		Value:   vout.Value,
 	}
 }
 
-func txHdrToData(tx electrum.TransactionHeader) data.Transaction {
+func txHdrsToData(txHdrs []electrum.TransactionHeader) []data.Transaction {
+	txs := make([]data.Transaction, len(txHdrs))
+	for i, txHdr := range txHdrs {
+		txs[i] = txHdrToData(txHdr)
+	}
+	return txs
+}
+
+func txHdrToData(txHdr electrum.TransactionHeader) data.Transaction {
 	return data.Transaction{
-		Height: tx.Height,
-		TxHash: tx.TxHash,
+		Height: txHdr.Height,
+		TxHash: txHdr.TxHash,
 	}
 }

@@ -3,8 +3,7 @@ package data
 import "context"
 
 type TransactionsQ interface {
-	Exists(ctx context.Context, txHash string) (bool, error)
-	Insert(ctx context.Context, tx Transaction) (*Transaction, error)
+	InsertBatch(ctx context.Context, txs []Transaction) error
 }
 
 type Transaction struct {
