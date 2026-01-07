@@ -39,13 +39,13 @@ func (np *Nodepool) getPrimaryNode() (*electrum.Client, error) {
 			return client, nil
 		}
 		if np.primaryNode.ReconnectAttempts < 1 {
-			return nil, errors.New("Primary node is dead")
+			return nil, errors.New("primary node is dead")
 		}
 		np.primaryNode.ReconnectAttempts -= 1
 		reconnectedNode, err := NewNodeEntry(np.primaryNode.NodepoolEntry)
 		if err != nil {
 			np.primaryNode.ReconnectAttempts = 0
-			return nil, errors.New("Primary node is dead")
+			return nil, errors.New("primary node is dead")
 		}
 		err = np.primaryNode.client.Close()
 		if err != nil {
@@ -62,7 +62,7 @@ func (np *Nodepool) getNextNode() (*electrum.Client, error) {
 	deadCount := 0
 	for {
 		if deadCount == len(np.nodes) {
-			return nil, errors.New("All nodes are dead")
+			return nil, errors.New("all nodes are dead")
 		}
 		node := np.nodes[np.nodeIdx]
 		if node.client.IsHealthy() {

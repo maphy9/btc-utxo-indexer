@@ -7,7 +7,7 @@ import (
 
 func NewNodepool(entries []NodepoolEntry) (*Nodepool, error) {
 	if len(entries) == 0 {
-		return nil, errors.New("At least one node is required")
+		return nil, errors.New("at least one node is required")
 	}
 
 	np := Nodepool{
