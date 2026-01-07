@@ -36,25 +36,20 @@ func newNodepool(entries []NodepoolEntry) (*nodepool, error) {
 		return nil, errors.New("At least one node is required")
 	}
 
-	primaryNode, err := newNodepoolEntry(entries[0])
-	if err != nil {
-		return nil, err
-	}
-
 	np := nodepool{
-		primaryNode: primaryNode,
 		nodes:       make([]nodepoolEntry, len(entries)),
 		nodeIdx:     0,
 	}
-
 	for i, entry := range entries {
 		node, err := newNodepoolEntry(entry)
 		if err != nil {
-			return nil, np.Close()
+			np.Close()
+			return nil, err
 		}
 		np.nodes[i] = node
 	}
-
+	np.primaryNode = np.nodes[0]	
+	
 	return &np, nil
 }
 
@@ -66,15 +61,11 @@ type nodepool struct {
 }
 
 func (np *nodepool) Close() error {
-	err := np.primaryNode.client.Close()
-	if err != nil {
-		return err
-	}
 	for _, node := range np.nodes {
 		if node.client == nil {
 			continue
 		}
-		err = node.client.Close()
+		err := node.client.Close()
 		if err != nil {
 			return err
 		}
@@ -123,15 +114,15 @@ func (np *nodepool) getNextClient() (*electrum.Client, error) {
 			np.incrementNodeIdx()
 			return node.client, nil
 		}
-		if node.NodepoolEntry.ReconnectAttempts < 1 {
+		if node.ReconnectAttempts < 1 {
 			deadCount += 1
 			np.incrementNodeIdx()
 			continue
 		}
-		node.NodepoolEntry.ReconnectAttempts -= 1
+		node.ReconnectAttempts -= 1
 		reconnectedNode, err := newNodepoolEntry(node.NodepoolEntry)
 		if err != nil {
-			node.NodepoolEntry.ReconnectAttempts = 0
+			node.ReconnectAttempts = 0
 			deadCount += 1
 			np.incrementNodeIdx()
 			continue
