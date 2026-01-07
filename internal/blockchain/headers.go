@@ -31,7 +31,7 @@ func (m *Manager) handleReorg(ctx context.Context, localTip, nextHdr *data.Heade
 			}
 		}
 
-		rawNextHdr, err := m.np.getHeader(ctx, localTip.Height+1)
+		rawNextHdr, err := m.np.GetHeader(ctx, localTip.Height+1)
 		if err != nil {
 			return false, err
 		}
@@ -55,7 +55,7 @@ func (m *Manager) SyncHeaders(ctx context.Context) error {
 			}
 		}
 
-		tipHeight, err := m.np.getTipHeight(ctx)
+		tipHeight, err := m.np.GetTipHeight(ctx)
 		if err != nil {
 			return err
 		}
@@ -66,7 +66,7 @@ func (m *Manager) SyncHeaders(ctx context.Context) error {
 
 		startHeight := localTip.Height + 1
 		count := min(chunkSize, tipHeight-startHeight+1)
-		rawHdrs, err := m.np.getHeaders(ctx, startHeight, count)
+		rawHdrs, err := m.np.GetHeaders(ctx, startHeight, count)
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func (m *Manager) ListenHeaders() {
 	m.wg.Add(1)
 	defer m.wg.Done()
 
-	notifyChan, err := m.np.subscribeHeaders(m.ctx)
+	notifyChan, err := m.np.SubscribeHeaders(m.ctx)
 	if err != nil {
 		m.log.WithError(err).Error("failed to subscribe to headers")
 		return

@@ -3,7 +3,7 @@ package config
 import (
 	"time"
 
-	"github.com/maphy9/btc-utxo-indexer/internal/blockchain"
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/nodepool"
 	"gitlab.com/distributed_lab/figure/v3"
 	"gitlab.com/distributed_lab/kit/comfig"
 	"gitlab.com/distributed_lab/kit/kv"
@@ -28,7 +28,7 @@ type ServiceConfig struct {
 		SSL               bool   `fig:"ssl"`
 		ReconnectAttempts uint32 `fig:"reconnect_attempts"`
 	} `fig:"nodes"`
-	NodeEntries []blockchain.NodepoolEntry
+	NodeEntries []nodepool.NodepoolEntry
 }
 
 type serviceConfiger struct {
@@ -44,9 +44,9 @@ func (c *serviceConfiger) ServiceConfig() *ServiceConfig {
 		if err != nil {
 			panic("Failed to read service config")
 		}
-		config.NodeEntries = make([]blockchain.NodepoolEntry, 0, len(config.RawNodes))
+		config.NodeEntries = make([]nodepool.NodepoolEntry, 0, len(config.RawNodes))
 		for address, nodeCfg := range config.RawNodes {
-			entry := blockchain.NodepoolEntry{
+			entry := nodepool.NodepoolEntry{
 				Address:           address,
 				SSL:               nodeCfg.SSL,
 				ReconnectAttempts: nodeCfg.ReconnectAttempts,

@@ -4,12 +4,13 @@ import (
 	"context"
 	"sync"
 
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/nodepool"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"gitlab.com/distributed_lab/logan/v3"
 )
 
-func NewManager(entries []NodepoolEntry, db data.MasterQ, log *logan.Entry) (*Manager, error) {
-	np, err := newNodepool(entries)
+func NewManager(entries []nodepool.NodepoolEntry, db data.MasterQ, log *logan.Entry) (*Manager, error) {
+	np, err := nodepool.NewNodepool(entries)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +31,7 @@ type Manager struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
-	np     *nodepool
+	np     *nodepool.Nodepool
 	db     data.MasterQ
 	log    *logan.Entry
 }
