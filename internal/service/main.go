@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/maphy9/btc-utxo-indexer/internal/blockchain"
 	"github.com/maphy9/btc-utxo-indexer/internal/config"
@@ -45,6 +46,13 @@ func newService(cfg config.Config) (*service, error) {
 		return nil, err
 	}
 	go manager.ListenHeaders()
+	go func() {
+		ticker := time.NewTicker(2 * time.Minute)
+		for {
+			<-ticker.C
+			manager.LogNodesHealth()
+		}
+	}()
 	err = manager.SubscribeSavedAddresses()
 	if err != nil {
 		return nil, err

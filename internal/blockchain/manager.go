@@ -41,3 +41,10 @@ func (m *Manager) Close() error {
 	m.wg.Wait()
 	return m.np.Close()
 }
+
+func (m *Manager) LogNodesHealth() {
+	healthStatuses := m.np.GetHealthStatuses()
+	for _, healthStatus := range healthStatuses {
+		m.log.Infof("Node %s: isHealthy: %t", healthStatus.NodeAddress, healthStatus.IsHealthy)
+	}
+}
