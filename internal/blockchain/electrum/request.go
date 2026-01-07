@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"sync/atomic"
-	"time"
 )
 
 type request struct {
@@ -36,7 +35,6 @@ func (c *Client) request(ctx context.Context, method string, params []any) (json
 		return nil, err
 	}
 
-	timeoutCtx, _ := context.WithTimeout(ctx, 5*time.Second)
 	select {
 	case res, ok := <-resChan:
 		if !ok {
@@ -46,7 +44,10 @@ func (c *Client) request(ctx context.Context, method string, params []any) (json
 			return nil, errors.New(res.Error.Message)
 		}
 		return res.Result, nil
-	case <-timeoutCtx.Done():
+	case <-ctx.Done():
+		c.mu.Lock()
+		delete(c.responses, id)
+		c.mu.Unlock()
 		return nil, errors.New("timeout")
 	}
 }

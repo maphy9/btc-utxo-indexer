@@ -72,7 +72,7 @@ func (m *addressesQ) GetStatus(address string) (string, error) {
 }
 
 func (m *addressesQ) GetBalance(ctx context.Context, address string) (int64, error) {
-	query := m.sql.Select("SUM(value)").
+	query := m.sql.Select("COALESCE(SUM(value), 0)").
 		From(utxosTableName).
 		Where("address = ?", address).
 		Where("spent_tx_hash IS NULL")

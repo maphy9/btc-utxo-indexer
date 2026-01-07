@@ -2,19 +2,27 @@ package electrum
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"net"
 	"sync"
+	"sync/atomic"
+	"time"
 )
 
 type Client struct {
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	conn      net.Conn
 	nextID    uint64
 	responses map[uint64]chan response
 	addrSubs  map[string]chan string
 	hdrsSub   chan Header
 	mu        sync.Mutex
+
+	isHealthy atomic.Bool
 }
 
 func NewClient(nodeAddr string, ssl bool) (*Client, error) {
@@ -31,14 +39,19 @@ func NewClient(nodeAddr string, ssl bool) (*Client, error) {
 		return nil, err
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	c := &Client{
+		ctx:       ctx,
+		cancel:    cancel,
 		conn:      conn,
 		responses: make(map[uint64]chan response),
 		addrSubs:  make(map[string]chan string),
 		hdrsSub:   make(chan Header, 10),
 	}
+	c.isHealthy.Store(true)
 
 	go c.listen()
+	go c.keepAlive()
 	return c, nil
 }
 
@@ -80,6 +93,7 @@ func (c *Client) listen() {
 		}
 	}
 
+	c.cancel()
 	close(c.hdrsSub)
 	c.mu.Lock()
 	for _, resChan := range c.responses {
@@ -91,7 +105,31 @@ func (c *Client) listen() {
 	c.mu.Unlock()
 }
 
+func (c *Client) keepAlive() {
+	defer c.isHealthy.Store(false)
+	ticker := time.NewTicker(60 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			ctx, cancel := context.WithTimeout(c.ctx, 5*time.Second)
+			_, err := c.request(ctx, "server.ping", []any{})
+			cancel()
+			if err != nil {
+				c.Close()
+				return
+			}
+		case <-c.ctx.Done():
+			return
+		}
+	}
+}
+
+func (c *Client) IsHealthy() bool {
+	return c.isHealthy.Load()
+}
+
 func (c *Client) Close() error {
+	c.cancel()
 	err := c.conn.Close()
 	if err != nil {
 		return err

@@ -3,6 +3,7 @@ package config
 import (
 	"time"
 
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/nodepool"
 	"gitlab.com/distributed_lab/figure/v3"
 	"gitlab.com/distributed_lab/kit/comfig"
 	"gitlab.com/distributed_lab/kit/kv"
@@ -23,6 +24,11 @@ type ServiceConfig struct {
 	AccessTokenExpireTime  time.Duration `fig:"access_token_expire_time,required"`
 	RefreshTokenKey        string        `fig:"refresh_token_key,required"`
 	RefreshTokenExpireTime time.Duration `fig:"refresh_token_expire_time,required"`
+	RawNodes               map[string]struct {
+		SSL               bool   `fig:"ssl"`
+		ReconnectAttempts uint32 `fig:"reconnect_attempts"`
+	} `fig:"nodes"`
+	NodeEntries []nodepool.NodepoolEntry
 }
 
 type serviceConfiger struct {
@@ -37,6 +43,15 @@ func (c *serviceConfiger) ServiceConfig() *ServiceConfig {
 		err := figure.Out(&config).From(raw).Please()
 		if err != nil {
 			panic("Failed to read service config")
+		}
+		config.NodeEntries = make([]nodepool.NodepoolEntry, 0, len(config.RawNodes))
+		for address, nodeCfg := range config.RawNodes {
+			entry := nodepool.NodepoolEntry{
+				Address:           address,
+				SSL:               nodeCfg.SSL,
+				ReconnectAttempts: nodeCfg.ReconnectAttempts,
+			}
+			config.NodeEntries = append(config.NodeEntries, entry)
 		}
 		return &config
 	}).(*ServiceConfig)
