@@ -4,18 +4,21 @@ import (
 	"context"
 	"sync"
 
-	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 	"gitlab.com/distributed_lab/logan/v3"
 )
 
-func NewManager(client *electrum.Client, db data.MasterQ, log *logan.Entry) (*Manager, error) {
-	ctx, cancel := context.WithCancel(context.Background())
+func NewManager(entries []NodepoolEntry, db data.MasterQ, log *logan.Entry) (*Manager, error) {
+	np, err := newNodepool(entries)
+	if err != nil {
+		return nil, err
+	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	m := &Manager{
 		ctx:    ctx,
 		cancel: cancel,
-		client: client,
+		np:     np,
 		db:     db,
 		log:    log,
 	}
@@ -27,8 +30,7 @@ type Manager struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
-
-	client *electrum.Client
+	np     *nodepool
 	db     data.MasterQ
 	log    *logan.Entry
 }
@@ -36,5 +38,5 @@ type Manager struct {
 func (m *Manager) Close() error {
 	m.cancel()
 	m.wg.Wait()
-	return m.client.Close()
+	return m.np.Close()
 }

@@ -20,3 +20,7 @@ service:
   access_token_expire_time: 1h or other value, see time.ParseDuration
   refresh_token_key: "something sha256'd, has to be a 64 char long hex string"
   refresh_token_expire_time: 8h or other value, see time.ParseDuration
+  nodes:
+    "electrum.blockstream.info:50002":
+      ssl: true
+      reconnect_attempts: 5

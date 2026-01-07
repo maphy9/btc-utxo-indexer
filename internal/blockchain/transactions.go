@@ -8,7 +8,7 @@ import (
 )
 
 func (m *Manager) processTransactionHeader(ctx context.Context, txHdr electrum.TransactionHeader) (*electrum.TransactionUtxos, error) {
-	txMerkle, err := m.client.GetTransactionMerkle(ctx, txHdr.TxHash, txHdr.Height)
+	txMerkle, err := m.np.getTransactionMerkle(ctx, txHdr.TxHash, txHdr.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (m *Manager) processTransactionHeader(ctx context.Context, txHdr electrum.T
 		return nil, nil
 	}
 
-	return m.client.GetTransaction(ctx, txHdr.TxHash)
+	return m.np.getTransaction(ctx, txHdr.TxHash)
 }
 
 func (m *Manager) syncUtxos(ctx context.Context, createdUtxos []data.Utxo, spentUtxos []electrum.UtxoVin) error {
@@ -46,7 +46,7 @@ func (m *Manager) syncUtxos(ctx context.Context, createdUtxos []data.Utxo, spent
 }
 
 func (m *Manager) syncTransactions(ctx context.Context, address string) error {
-	txHdrs, err := m.client.GetTransactionHeaders(ctx, address)
+	txHdrs, err := m.np.getTransactionHeaders(ctx, address)
 	if err != nil {
 		return err
 	}

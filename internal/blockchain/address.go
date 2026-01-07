@@ -3,7 +3,7 @@ package blockchain
 import "context"
 
 func (m *Manager) SubscribeAddress(address string) error {
-	notifyChan, err := m.client.SubscribeAddress(m.ctx, address)
+	notifyChan, err := m.np.subscribeAddress(m.ctx, address)
 	if err != nil {
 		m.log.WithError(err).Errorf("failed to subscribe to address (%s)", address)
 		return err

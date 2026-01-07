@@ -12,9 +12,9 @@ import (
 )
 
 type Client struct {
-	ctx context.Context
+	ctx    context.Context
 	cancel context.CancelFunc
-	
+
 	conn      net.Conn
 	nextID    uint64
 	responses map[uint64]chan response
@@ -41,8 +41,8 @@ func NewClient(nodeAddr string, ssl bool) (*Client, error) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &Client{
-		ctx: ctx,
-		cancel: cancel,
+		ctx:       ctx,
+		cancel:    cancel,
 		conn:      conn,
 		responses: make(map[uint64]chan response),
 		addrSubs:  make(map[string]chan string),
@@ -111,7 +111,7 @@ func (c *Client) keepAlive() {
 	for {
 		select {
 		case <-ticker.C:
-			ctx, cancel := context.WithTimeout(c.ctx, 5 * time.Second)
+			ctx, cancel := context.WithTimeout(c.ctx, 5*time.Second)
 			_, err := c.request(ctx, "server.ping", []any{})
 			cancel()
 			if err != nil {
