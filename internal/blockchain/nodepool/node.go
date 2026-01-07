@@ -69,7 +69,7 @@ func (np *Nodepool) getNextNode() (*electrum.Client, error) {
 			np.incrementNodeIdx()
 			return node.client, nil
 		}
-		
+
 		if node.ReconnectAttempts < 1 {
 			deadCount += 1
 			np.incrementNodeIdx()
@@ -83,7 +83,7 @@ func (np *Nodepool) getNextNode() (*electrum.Client, error) {
 			np.incrementNodeIdx()
 			continue
 		}
-		
+
 		err = node.client.Close()
 		if err != nil {
 			return nil, err

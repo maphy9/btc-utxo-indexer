@@ -2,7 +2,7 @@ package nodepool
 
 type HealthStatus struct {
 	NodeAddress string
-	IsHealthy		bool
+	IsHealthy   bool
 }
 
 func (np *Nodepool) GetHealthStatuses() []HealthStatus {
@@ -12,7 +12,7 @@ func (np *Nodepool) GetHealthStatuses() []HealthStatus {
 	for i, node := range np.nodes {
 		healthStatuses[i] = HealthStatus{
 			NodeAddress: node.Address,
-			IsHealthy: node.client.IsHealthy(),
+			IsHealthy:   node.client.IsHealthy(),
 		}
 	}
 	return healthStatuses

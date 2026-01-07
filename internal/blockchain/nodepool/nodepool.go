@@ -11,8 +11,8 @@ func NewNodepool(entries []NodepoolEntry) (*Nodepool, error) {
 	}
 
 	np := Nodepool{
-		nodes:       make([]*NodeEntry, len(entries)),
-		nodeIdx:     0,
+		nodes:   make([]*NodeEntry, len(entries)),
+		nodeIdx: 0,
 	}
 	for i, entry := range entries {
 		node, err := NewNodeEntry(entry)
@@ -22,8 +22,8 @@ func NewNodepool(entries []NodepoolEntry) (*Nodepool, error) {
 		}
 		np.nodes[i] = node
 	}
-	np.primaryNode = np.nodes[0]	
-	
+	np.primaryNode = np.nodes[0]
+
 	return &np, nil
 }
 
