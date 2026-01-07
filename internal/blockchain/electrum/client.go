@@ -7,19 +7,22 @@ import (
 	"encoding/json"
 	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
 type Client struct {
 	ctx context.Context
 	cancel context.CancelFunc
-
+	
 	conn      net.Conn
 	nextID    uint64
 	responses map[uint64]chan response
 	addrSubs  map[string]chan string
 	hdrsSub   chan Header
 	mu        sync.Mutex
+
+	isHealthy atomic.Bool
 }
 
 func NewClient(nodeAddr string, ssl bool) (*Client, error) {
@@ -45,6 +48,7 @@ func NewClient(nodeAddr string, ssl bool) (*Client, error) {
 		addrSubs:  make(map[string]chan string),
 		hdrsSub:   make(chan Header, 10),
 	}
+	c.isHealthy.Store(true)
 
 	go c.listen()
 	go c.keepAlive()
@@ -102,6 +106,7 @@ func (c *Client) listen() {
 }
 
 func (c *Client) keepAlive() {
+	defer c.isHealthy.Store(false)
 	ticker := time.NewTicker(60 * time.Second)
 	for {
 		select {
@@ -117,6 +122,10 @@ func (c *Client) keepAlive() {
 			return
 		}
 	}
+}
+
+func (c *Client) IsHealthy() bool {
+	return c.isHealthy.Load()
 }
 
 func (c *Client) Close() error {
