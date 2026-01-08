@@ -34,10 +34,6 @@ type Nodepool struct {
 	mu          sync.Mutex
 }
 
-func (np *Nodepool) incrementNodeIdx() {
-	np.nodeIdx = (np.nodeIdx + 1) % uint64(len(np.nodes))
-}
-
 func (np *Nodepool) Close() error {
 	for _, node := range np.nodes {
 		if node.client == nil {

@@ -2,12 +2,16 @@ package requests
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+	"regexp"
 )
 
 type AddAddressRequest struct {
 	Address string `json:"address"`
 }
+
+var btcAddressPattern = regexp.MustCompile(`^([13][a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[a-zA-HJ-NP-Z0-9]{11,71})$`)
 
 func NewAddAddressRequest(r *http.Request) (AddAddressRequest, error) {
 	var request AddAddressRequest
@@ -15,9 +19,8 @@ func NewAddAddressRequest(r *http.Request) (AddAddressRequest, error) {
 	if err != nil {
 		return request, err
 	}
-	// matched, err := regexp.Match("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$", []byte(request.Address))
-	// if err != nil || !matched {
-	// 	return request, errors.New("invalid bitcoin address")
-	// }
+	if !btcAddressPattern.Match([]byte(request.Address)) {
+		return request, errors.New("invalid bitcoin address")
+	}
 	return request, nil
 }

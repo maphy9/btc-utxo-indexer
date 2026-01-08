@@ -62,7 +62,7 @@ func (m *Manager) syncTransactions(ctx context.Context, address string) error {
 
 	mu := sync.Mutex{}
 	wg := sync.WaitGroup{}
-	txHdrsChan := make(chan electrum.TransactionHeader, 10)
+	txHdrsChan := make(chan electrum.TransactionHeader, m.np.GetHealthyCount())
 	errChan := make(chan error, 1)
 	doneChan := make(chan struct{})
 	once := sync.Once{}

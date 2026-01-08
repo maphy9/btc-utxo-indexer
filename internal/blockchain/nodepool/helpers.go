@@ -17,3 +17,19 @@ func (np *Nodepool) GetHealthStatuses() []HealthStatus {
 	}
 	return healthStatuses
 }
+
+func (np *Nodepool) GetHealthyCount() int {
+	np.mu.Lock()
+	defer np.mu.Unlock()
+	count := 0
+	for _, node := range np.nodes {
+		if node.client.IsHealthy() {
+			count += 1
+		}
+	}
+	return count
+}
+
+func (np *Nodepool) incrementNodeIdx() {
+	np.nodeIdx = (np.nodeIdx + 1) % uint64(len(np.nodes))
+}
