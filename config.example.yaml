@@ -24,3 +24,9 @@ service:
     "electrum.blockstream.info:50002":
       ssl: true
       reconnect_attempts: 5
+    "electrum.blockstream.info:50001":
+      ssl: false
+      reconnect_attempts: 5
+    "electrum.cakewallet.com:50002":
+      ssl: true
+      reconnect_attempts: 5
