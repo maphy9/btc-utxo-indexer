@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"context"
+	"sync"
 
 	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
@@ -58,22 +59,56 @@ func (m *Manager) syncTransactions(ctx context.Context, address string) error {
 
 	createdUtxos := make([]electrum.UtxoVout, 0, 64)
 	spentUtxos := make([]electrum.UtxoVin, 0, 64)
-	for _, txHdr := range txHdrs {
-		tx, err := m.processTransactionHeader(ctx, txHdr)
-		if err != nil {
-			return err
-		}
-		if tx == nil {
-			continue
-		}
 
-		for _, utxo := range tx.Vouts {
-			if utxo.Address != address {
-				continue
+	mu := sync.Mutex{}
+	wg := sync.WaitGroup{}
+	txHdrsChan := make(chan electrum.TransactionHeader, 10)
+	errChan := make(chan error, 1)
+	doneChan := make(chan struct{})
+	once := sync.Once{}
+	for i := 0; i < 10; i += 1 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for txHdr := range txHdrsChan {
+				select {
+				case <-doneChan:
+					return
+				default:
+				}
+				tx, err := m.processTransactionHeader(ctx, txHdr)
+				if err != nil {
+					once.Do(func() {
+						errChan <- err
+						close(doneChan)
+					})
+					return
+				}
+				if tx == nil {
+					continue
+				}
+
+				mu.Lock()
+				for _, utxo := range tx.Vouts {
+					if utxo.Address != address {
+						continue
+					}
+					createdUtxos = append(createdUtxos, utxo)
+				}
+				spentUtxos = append(spentUtxos, tx.Vins...)
+				mu.Unlock()
 			}
-			createdUtxos = append(createdUtxos, utxo)
-		}
-		spentUtxos = append(spentUtxos, tx.Vins...)
+		}()
+	}
+	for _, txHdr := range txHdrs {
+		txHdrsChan <- txHdr
+	}
+	close(txHdrsChan)
+	wg.Wait()
+	select {
+	case err := <-errChan:
+		return err
+	default:
 	}
 
 	err = m.syncUtxos(ctx, voutsToData(createdUtxos), spentUtxos)
