@@ -62,11 +62,12 @@ func (m *Manager) syncTransactions(ctx context.Context, address string) error {
 
 	mu := sync.Mutex{}
 	wg := sync.WaitGroup{}
-	txHdrsChan := make(chan electrum.TransactionHeader, m.np.GetHealthyCount())
-	errChan := make(chan error, 1)
+	healthyCount := m.np.GetHealthyCount()
+	txHdrsChan := make(chan electrum.TransactionHeader, healthyCount)
+	var processingErr error
 	doneChan := make(chan struct{})
 	once := sync.Once{}
-	for i := 0; i < 10; i += 1 {
+	for i := 0; i < healthyCount; i += 1 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -79,7 +80,7 @@ func (m *Manager) syncTransactions(ctx context.Context, address string) error {
 				tx, err := m.processTransactionHeader(ctx, txHdr)
 				if err != nil {
 					once.Do(func() {
-						errChan <- err
+						processingErr = err
 						close(doneChan)
 					})
 					return
@@ -105,10 +106,8 @@ func (m *Manager) syncTransactions(ctx context.Context, address string) error {
 	}
 	close(txHdrsChan)
 	wg.Wait()
-	select {
-	case err := <-errChan:
-		return err
-	default:
+	if processingErr != nil {
+		return processingErr
 	}
 
 	err = m.syncUtxos(ctx, voutsToData(createdUtxos), spentUtxos)
