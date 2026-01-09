@@ -21,10 +21,6 @@ func (m *masterQ) Addresses() data.AddressesQ {
 	return newAddressesQ(m.db)
 }
 
-func (m *masterQ) Utxos() data.UtxosQ {
-	return newUtxosQ(m.db)
-}
-
 func (m *masterQ) Transactions() data.TransactionsQ {
 	return newTransactionsQ(m.db)
 }

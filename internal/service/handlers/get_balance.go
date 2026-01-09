@@ -16,7 +16,7 @@ func GetBalance(w http.ResponseWriter, r *http.Request) {
 	db := helpers.DB(r)
 	address := chi.URLParam(r, "address")
 
-	balance, err := db.Addresses().GetBalance(ctx, address)
+	balance, err := db.Transactions().GetAddressBalance(ctx, address)
 	if err != nil {
 		logger.WithError(err).Error("failed to get address balance")
 		ape.RenderErr(w, apierrors.NewApiError(

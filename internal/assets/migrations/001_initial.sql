@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS headers (
 CREATE TABLE IF NOT EXISTS transactions (
   tx_hash text PRIMARY KEY,
   height integer REFERENCES headers (height) ON DELETE CASCADE NOT NULL
+  created_at timestamptz,
 );
 
 CREATE TABLE transaction_outputs (
