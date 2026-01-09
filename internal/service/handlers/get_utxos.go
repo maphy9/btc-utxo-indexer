@@ -6,7 +6,6 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/maphy9/btc-utxo-indexer/internal/service/errors/apierrors"
 	"github.com/maphy9/btc-utxo-indexer/internal/service/helpers"
-	"github.com/maphy9/btc-utxo-indexer/internal/service/responses"
 	"gitlab.com/distributed_lab/ape"
 )
 
@@ -16,7 +15,7 @@ func GetUtxos(w http.ResponseWriter, r *http.Request) {
 	db := helpers.DB(r)
 	address := chi.URLParam(r, "address")
 
-	utxos, err := db.Utxos().GetActiveByAddress(ctx, address)
+	utxos, err := db.Transactions().GetUtxosByAddress(ctx, address)
 	if err != nil {
 		logger.WithError(err).Error("failed to get utxos")
 		ape.RenderErr(w, apierrors.NewApiError(
@@ -26,5 +25,5 @@ func GetUtxos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ape.Render(w, responses.NewGetUtxosResponse(utxos))
+	ape.Render(w, utxos)
 }

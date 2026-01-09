@@ -1,16 +1,18 @@
-package electrum
+package rpc
 
 import (
 	"context"
 	"encoding/json"
+
+	"github.com/maphy9/btc-utxo-indexer/internal/data"
 )
 
-type TransactionHeader struct {
+type transactionHeader struct {
 	Height int    `json:"height"`
 	TxHash string `json:"tx_hash"`
 }
 
-func (c *Client) GetTransactionHeaders(ctx context.Context, address string) ([]TransactionHeader, error) {
+func (c *Client) GetTransactionHeaders(ctx context.Context, address string) ([]data.Transaction, error) {
 	scripthash, err := addressToScripthash(address)
 	if err != nil {
 		return nil, err
@@ -21,18 +23,18 @@ func (c *Client) GetTransactionHeaders(ctx context.Context, address string) ([]T
 		return nil, err
 	}
 
-	var txHdrs []TransactionHeader
+	var txHdrs []transactionHeader
 	err = json.Unmarshal(rawTxHdrs, &txHdrs)
 	if err != nil {
 		return nil, err
 	}
 
-	txHdrsFiltered := make([]TransactionHeader, 0, len(txHdrs))
+	txHdrsFiltered := make([]data.Transaction, 0, len(txHdrs))
 	for _, txHdr := range txHdrs {
 		if txHdr.Height == -1 {
 			continue // TODO: handle mempool headers
 		}
-		txHdrsFiltered = append(txHdrsFiltered, txHdr)
+		txHdrsFiltered = append(txHdrsFiltered, txHdrToData(txHdr))
 	}
 	return txHdrsFiltered, nil
 }

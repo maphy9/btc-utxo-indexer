@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS headers (
   height integer PRIMARY KEY,
   hash text UNIQUE NOT NULL,
   parent_hash text NOT NULL,
-  root text NOT NULL
+  root text NOT NULL,
+  created_at timestamp
 );
 
 CREATE TABLE IF NOT EXISTS transactions (
@@ -35,20 +36,37 @@ CREATE TABLE IF NOT EXISTS transactions (
   height integer REFERENCES headers (height) ON DELETE CASCADE NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS utxos
-(
-  address text REFERENCES addresses (address) ON DELETE CASCADE NOT NULL,
+CREATE TABLE transaction_outputs (
   tx_hash text REFERENCES transactions (tx_hash) ON DELETE CASCADE NOT NULL,
-  tx_pos integer NOT NULL,
-  spent_tx_hash text REFERENCES transactions (tx_hash) ON DELETE SET NULL,
+  output_index integer NOT NULL,
   value bigint NOT NULL,
-  PRIMARY KEY (tx_hash, tx_pos)
+  address text,
+  script_hex text NOT NULL,
+  spent_by_tx_hash text REFERENCES transactions (tx_hash) ON DELETE SET NULL,
+  PRIMARY KEY (tx_hash, output_index)
 );
 
-CREATE INDEX idx_utxos_address ON utxos (address);
+CREATE TABLE transaction_inputs (
+  tx_hash text REFERENCES transactions (tx_hash) ON DELETE CASCADE NOT NULL,
+  input_index integer NOT NULL,
+  prev_tx_hash text NOT NULL,
+  prev_output_index integer NOT NULL,
+  PRIMARY KEY (tx_hash, input_index)
+);
+
+CREATE INDEX idx_tx_outputs_address ON transaction_outputs (address);
+
+CREATE INDEX idx_tx_outputs_unspent ON transaction_outputs (address) 
+WHERE spent_by_tx_hash IS NULL;
+
+CREATE INDEX idx_tx_inputs_prev ON transaction_inputs (prev_tx_hash, prev_output_index);
+
+CREATE INDEX idx_tx_outputs_spent_by ON transaction_outputs (spent_by_tx_hash);
 
 -- +migrate Down
-DROP TABLE IF EXISTS utxos CASCADE;
+DROP TABLE IF EXISTS transaction_inputs CASCADE;
+
+DROP TABLE IF EXISTS transaction_outputs CASCADE;
 
 DROP TABLE IF EXISTS transactions CASCADE;
 

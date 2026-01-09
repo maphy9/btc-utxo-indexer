@@ -1,4 +1,4 @@
-package electrum
+package rpc
 
 import (
 	"bufio"
@@ -9,6 +9,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/maphy9/btc-utxo-indexer/internal/data"
 )
 
 type Client struct {
@@ -19,7 +21,7 @@ type Client struct {
 	nextID    uint64
 	responses map[uint64]chan response
 	addrSubs  map[string]chan string
-	hdrsSub   chan Header
+	hdrsSub   chan *data.Header
 	mu        sync.Mutex
 
 	isHealthy atomic.Bool
@@ -46,7 +48,7 @@ func NewClient(nodeAddr string, ssl bool) (*Client, error) {
 		conn:      conn,
 		responses: make(map[uint64]chan response),
 		addrSubs:  make(map[string]chan string),
-		hdrsSub:   make(chan Header, 10),
+		hdrsSub:   make(chan *data.Header, 10),
 	}
 	c.isHealthy.Store(true)
 

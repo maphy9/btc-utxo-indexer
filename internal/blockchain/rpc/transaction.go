@@ -1,4 +1,4 @@
-package electrum
+package rpc
 
 import (
 	"context"
@@ -6,24 +6,12 @@ import (
 	"encoding/json"
 
 	"github.com/btcsuite/btcd/btcutil"
+	"github.com/maphy9/btc-utxo-indexer/internal/data"
 )
 
-type UtxoVout struct {
-	TxHash  string
-	Value   int64
-	N       int
-	Address string
-}
-
-type UtxoVin struct {
-	SpentTxHash string
-	TxHash      string
-	Vout        int
-}
-
-type TransactionUtxos struct {
-	Vins  []UtxoVin
-	Vouts []UtxoVout
+type TransactionData struct {
+	Inputs  []data.TransactionInput
+	Outputs []data.TransactionOutput
 }
 
 type TransactionMerkle struct {
@@ -32,7 +20,7 @@ type TransactionMerkle struct {
 	Pos    int      `json:"pos"`
 }
 
-func (c *Client) GetTransaction(ctx context.Context, txHash string) (*TransactionUtxos, error) {
+func (c *Client) GetTransactionData(ctx context.Context, txHash string) (*TransactionData, error) {
 	rawRes, err := c.request(ctx, "blockchain.transaction.get", []any{txHash})
 	if err != nil {
 		return nil, err
@@ -51,7 +39,7 @@ func (c *Client) GetTransaction(ctx context.Context, txHash string) (*Transactio
 	if err != nil {
 		return nil, err
 	}
-	return extractTransactionUtxos(btcutilTx), nil
+	return extractTransactionData(btcutilTx), nil
 }
 
 func (c *Client) GetTransactionMerkle(ctx context.Context, txHash string, height int) (*TransactionMerkle, error) {

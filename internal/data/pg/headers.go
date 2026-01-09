@@ -58,10 +58,10 @@ func (m *headersQ) InsertBatch(ctx context.Context, hdrs []*data.Header) error {
 	}
 
 	query := m.sql.Insert(headersTableName).
-		Columns("height", "hash", "parent_hash", "root")
+		Columns("height", "hash", "parent_hash", "root", "created_at")
 
 	for _, hdr := range hdrs {
-		query = query.Values(hdr.Height, hdr.Hash, hdr.ParentHash, hdr.Root)
+		query = query.Values(hdr.Height, hdr.Hash, hdr.ParentHash, hdr.Root, hdr.CreatedAt)
 	}
 
 	return m.db.ExecContext(ctx, query)

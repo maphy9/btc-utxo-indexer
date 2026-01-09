@@ -3,7 +3,7 @@ package nodepool
 import (
 	"errors"
 
-	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/rpc"
 )
 
 type NodepoolEntry struct {
@@ -14,11 +14,11 @@ type NodepoolEntry struct {
 
 type NodeEntry struct {
 	NodepoolEntry
-	client *electrum.Client
+	client *rpc.Client
 }
 
 func NewNodeEntry(entry NodepoolEntry) (*NodeEntry, error) {
-	client, err := electrum.NewClient(entry.Address, entry.SSL)
+	client, err := rpc.NewClient(entry.Address, entry.SSL)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func NewNodeEntry(entry NodepoolEntry) (*NodeEntry, error) {
 	}, nil
 }
 
-func (np *Nodepool) getPrimaryNode() (*electrum.Client, error) {
+func (np *Nodepool) getPrimaryNode() (*rpc.Client, error) {
 	np.mu.Lock()
 	defer np.mu.Unlock()
 
@@ -55,7 +55,7 @@ func (np *Nodepool) getPrimaryNode() (*electrum.Client, error) {
 	}
 }
 
-func (np *Nodepool) getNextNode() (*electrum.Client, error) {
+func (np *Nodepool) getNextNode() (*rpc.Client, error) {
 	np.mu.Lock()
 	defer np.mu.Unlock()
 
