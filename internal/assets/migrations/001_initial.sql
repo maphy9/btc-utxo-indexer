@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS headers (
   hash text UNIQUE NOT NULL,
   parent_hash text NOT NULL,
   root text NOT NULL,
-  created_at time
+  created_at timestamp
 );
 
 CREATE TABLE IF NOT EXISTS transactions (

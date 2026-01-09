@@ -50,8 +50,6 @@ func (m *Manager) SyncHeaders(ctx context.Context) error {
 			}
 		}
 
-		m.log.Infof("SYNCING HEADERS FROM %d", localTip.Height)
-
 		tipHeight, err := m.np.GetTipHeight(ctx)
 		if err != nil {
 			return err

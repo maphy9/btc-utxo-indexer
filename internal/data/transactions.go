@@ -16,9 +16,8 @@ type TransactionsQ interface {
 }
 
 type Transaction struct {
-	TxHash    string    `db:"tx_hash"`
-	CreatedAt time.Time `db:"created_at"`
-	Height    int       `db:"height"`
+	TxHash string `db:"tx_hash"`
+	Height int    `db:"height"`
 }
 
 type TransactionOutput struct {

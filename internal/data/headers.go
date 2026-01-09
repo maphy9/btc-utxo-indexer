@@ -14,9 +14,9 @@ type HeadersQ interface {
 }
 
 type Header struct {
-	Height     int    `db:"height" structs:"height"`
-	Hash       string `db:"hash" structs:"hash"`
-	ParentHash string `db:"parent_hash" structs:"parent_hash"`
-	Root       string `db:"root" structs:"root"`
+	Height     int       `db:"height" structs:"height"`
+	Hash       string    `db:"hash" structs:"hash"`
+	ParentHash string    `db:"parent_hash" structs:"parent_hash"`
+	Root       string    `db:"root" structs:"root"`
 	CreatedAt  time.Time `db:"created_at" structs:"created_at"`
 }

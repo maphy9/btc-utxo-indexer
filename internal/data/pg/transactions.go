@@ -51,7 +51,7 @@ func (m *transactionsQ) GetAddressBalance(ctx context.Context, address string) (
 func (m *transactionsQ) GetAddressTransactions(ctx context.Context, address string) ([]data.AddressTransaction, error) {
 	query := squirrel.Expr(
 		fmt.Sprintf(
-			`SELECT txs.tx_hash, height, created_at, SUM(delta) AS delta
+			`SELECT txs.tx_hash, txs.height, hdrs.created_at, SUM(delta) AS delta
 			FROM (
 				SELECT tx_hash, COALESCE(SUM(value), 0) AS delta
 				FROM %s
@@ -66,11 +66,13 @@ func (m *transactionsQ) GetAddressTransactions(ctx context.Context, address stri
 				GROUP BY spent_by_tx_hash
 			) AS tmp
 			JOIN %s AS txs ON tmp.tx_hash = txs.tx_hash
-			GROUP BY txs.tx_hash, height, created_at
+			JOIN %s AS hdrs ON hdrs.height = txs.height
+			GROUP BY txs.tx_hash, txs.height, hdrs.created_at
 			ORDER BY created_at`,
 			transactionOutputsTableName,
 			transactionOutputsTableName,
 			transactionsTableName,
+			headersTableName,
 		),
 		address,
 	)
@@ -86,11 +88,11 @@ func (m *transactionsQ) InsertTransactionsBatch(ctx context.Context, txs []data.
 	}
 
 	query := m.sql.Insert(transactionsTableName).
-		Columns("tx_hash", "height", "created_at").
+		Columns("tx_hash", "height").
 		Suffix("ON CONFLICT DO NOTHING")
 
 	for _, tx := range txs {
-		query = query.Values(tx.TxHash, tx.Height, tx.CreatedAt)
+		query = query.Values(tx.TxHash, tx.Height)
 	}
 
 	return m.db.ExecContext(ctx, query)
@@ -150,7 +152,7 @@ func (m *transactionsQ) SpendTransactionOutputs(ctx context.Context, ins []data.
 			transactionOutputsTableName,
 			strings.Join(placeholders, ","),
 		),
-		values...
+		values...,
 	)
 
 	return m.db.ExecContext(ctx, query)
