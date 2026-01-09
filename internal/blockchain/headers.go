@@ -3,7 +3,6 @@ package blockchain
 import (
 	"context"
 
-	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 )
 
@@ -31,11 +30,7 @@ func (m *Manager) handleReorg(ctx context.Context, localTip, nextHdr *data.Heade
 			}
 		}
 
-		rawNextHdr, err := m.np.GetHeader(ctx, localTip.Height+1)
-		if err != nil {
-			return false, err
-		}
-		nextHdr, err = electrumHeaderToData(rawNextHdr)
+		nextHdr, err = m.np.GetHeader(ctx, localTip.Height+1)
 		if err != nil {
 			return false, err
 		}
@@ -55,6 +50,8 @@ func (m *Manager) SyncHeaders(ctx context.Context) error {
 			}
 		}
 
+		m.log.Infof("SYNCING HEADERS FROM %d", localTip.Height)
+
 		tipHeight, err := m.np.GetTipHeight(ctx)
 		if err != nil {
 			return err
@@ -66,18 +63,13 @@ func (m *Manager) SyncHeaders(ctx context.Context) error {
 
 		startHeight := localTip.Height + 1
 		count := min(chunkSize, tipHeight-startHeight+1)
-		rawHdrs, err := m.np.GetHeaders(ctx, startHeight, count)
-		if err != nil {
-			return err
-		}
-
-		dataHdrs, err := electrumHeadersToData(rawHdrs)
+		hdrs, err := m.np.GetHeaders(ctx, startHeight, count)
 		if err != nil {
 			return err
 		}
 
 		if localTip.Height >= 0 {
-			nextHdr := dataHdrs[0]
+			nextHdr := hdrs[0]
 			reorgDetected, err := m.handleReorg(ctx, localTip, nextHdr)
 			if err != nil {
 				return err
@@ -87,7 +79,7 @@ func (m *Manager) SyncHeaders(ctx context.Context) error {
 			}
 		}
 
-		err = m.db.Headers().InsertBatch(ctx, dataHdrs)
+		err = m.db.Headers().InsertBatch(ctx, hdrs)
 		if err != nil {
 			return err
 		}
@@ -126,7 +118,7 @@ func (m *Manager) ListenHeaders() {
 	}
 }
 
-func (m *Manager) processHeader(ctx context.Context, rawNextHdr electrum.Header) error {
+func (m *Manager) processHeader(ctx context.Context, nextHdr *data.Header) error {
 	localTip, err := m.db.Headers().GetTipHeader(ctx)
 	if err != nil {
 		return err
@@ -137,20 +129,15 @@ func (m *Manager) processHeader(ctx context.Context, rawNextHdr electrum.Header)
 		}
 	}
 
-	if rawNextHdr.Height <= localTip.Height {
+	if nextHdr.Height <= localTip.Height {
 		return err
 	}
 
-	if rawNextHdr.Height > localTip.Height+1 {
+	if nextHdr.Height > localTip.Height+1 {
 		if err := m.SyncHeaders(ctx); err != nil {
 			return err
 		}
 		return nil
-	}
-
-	nextHdr, err := electrumHeaderToData(&rawNextHdr)
-	if err != nil {
-		return err
 	}
 
 	reorgDetected, err := m.handleReorg(ctx, localTip, nextHdr)

@@ -27,13 +27,13 @@ CREATE TABLE IF NOT EXISTS headers (
   height integer PRIMARY KEY,
   hash text UNIQUE NOT NULL,
   parent_hash text NOT NULL,
-  root text NOT NULL
+  root text NOT NULL,
+  created_at time
 );
 
 CREATE TABLE IF NOT EXISTS transactions (
   tx_hash text PRIMARY KEY,
   height integer REFERENCES headers (height) ON DELETE CASCADE NOT NULL
-  created_at timestamptz,
 );
 
 CREATE TABLE transaction_outputs (
@@ -64,7 +64,9 @@ CREATE INDEX idx_tx_inputs_prev ON transaction_inputs (prev_tx_hash, prev_output
 CREATE INDEX idx_tx_outputs_spent_by ON transaction_outputs (spent_by_tx_hash);
 
 -- +migrate Down
-DROP TABLE IF EXISTS utxos CASCADE;
+DROP TABLE IF EXISTS transaction_inputs CASCADE;
+
+DROP TABLE IF EXISTS transaction_outputs CASCADE;
 
 DROP TABLE IF EXISTS transactions CASCADE;
 

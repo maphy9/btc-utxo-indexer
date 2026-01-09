@@ -4,11 +4,11 @@ import (
 	"context"
 	"sync"
 
-	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/electrum"
+	"github.com/maphy9/btc-utxo-indexer/internal/blockchain/rpc"
 	"github.com/maphy9/btc-utxo-indexer/internal/data"
 )
 
-func (m *Manager) processTransactionHeader(ctx context.Context, txHdr electrum.TransactionHeader) (*electrum.TransactionUtxos, error) {
+func (m *Manager) processTransactionHeader(ctx context.Context, txHdr data.Transaction) (*rpc.TransactionData, error) {
 	txMerkle, err := m.np.GetTransactionMerkle(ctx, txHdr.TxHash, txHdr.Height)
 	if err != nil {
 		return nil, err
@@ -26,23 +26,22 @@ func (m *Manager) processTransactionHeader(ctx context.Context, txHdr electrum.T
 		return nil, nil
 	}
 
-	return m.np.GetTransaction(ctx, txHdr.TxHash)
+	return m.np.GetTransactionData(ctx, txHdr.TxHash)
 }
 
-func (m *Manager) syncUtxos(ctx context.Context, createdUtxos []data.Utxo, spentUtxos []electrum.UtxoVin) error {
+func (m *Manager) syncUtxos(ctx context.Context, txOuts []data.TransactionOutput, txIns []data.TransactionInput) error {
 	return m.db.Transaction(func(q data.MasterQ) error {
-		err := q.Utxos().InsertBatch(ctx, createdUtxos)
+		err := q.Transactions().InsertTransactionOutputsBatch(ctx, txOuts)
 		if err != nil {
 			return err
 		}
 
-		for _, spentUtxo := range spentUtxos {
-			err = q.Utxos().Spend(ctx, spentUtxo.TxHash, spentUtxo.Vout, spentUtxo.SpentTxHash)
-			if err != nil {
-				return err
-			}
+		err = q.Transactions().InsertTransactionInputsBatch(ctx, txIns)
+		if err != nil {
+			return err
 		}
-		return nil
+
+		return q.Transactions().SpendTransactionOutputs(ctx, txIns)
 	})
 }
 
@@ -52,18 +51,18 @@ func (m *Manager) syncTransactions(ctx context.Context, address string) error {
 		return err
 	}
 
-	err = m.db.Transactions().InsertBatch(ctx, txHdrsToData(txHdrs))
+	err = m.db.Transactions().InsertTransactionsBatch(ctx, txHdrs)
 	if err != nil {
 		return err
 	}
 
-	createdUtxos := make([]electrum.UtxoVout, 0, 64)
-	spentUtxos := make([]electrum.UtxoVin, 0, 64)
+	createdUtxos := make([]data.TransactionOutput, 0, 64)
+	spentUtxos := make([]data.TransactionInput, 0, 64)
 
 	mu := sync.Mutex{}
 	wg := sync.WaitGroup{}
 	healthyCount := m.np.GetHealthyCount()
-	txHdrsChan := make(chan electrum.TransactionHeader, healthyCount)
+	txHdrsChan := make(chan data.Transaction, healthyCount)
 	var processingErr error
 	doneChan := make(chan struct{})
 	once := sync.Once{}
@@ -90,13 +89,8 @@ func (m *Manager) syncTransactions(ctx context.Context, address string) error {
 				}
 
 				mu.Lock()
-				for _, utxo := range tx.Vouts {
-					if utxo.Address != address {
-						continue
-					}
-					createdUtxos = append(createdUtxos, utxo)
-				}
-				spentUtxos = append(spentUtxos, tx.Vins...)
+				createdUtxos = append(createdUtxos, tx.Outputs...)
+				spentUtxos = append(spentUtxos, tx.Inputs...)
 				mu.Unlock()
 			}
 		}()
@@ -110,7 +104,7 @@ func (m *Manager) syncTransactions(ctx context.Context, address string) error {
 		return processingErr
 	}
 
-	err = m.syncUtxos(ctx, voutsToData(createdUtxos), spentUtxos)
+	err = m.syncUtxos(ctx, createdUtxos, spentUtxos)
 	if err != nil {
 		return err
 	}

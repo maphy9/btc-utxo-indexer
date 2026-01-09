@@ -12,6 +12,7 @@ type TransactionsQ interface {
 	InsertTransactionsBatch(ctx context.Context, txs []Transaction) error
 	InsertTransactionOutputsBatch(ctx context.Context, txs []TransactionOutput) error
 	InsertTransactionInputsBatch(ctx context.Context, txs []TransactionInput) error
+	SpendTransactionOutputs(ctx context.Context, txs []TransactionInput) error
 }
 
 type Transaction struct {
